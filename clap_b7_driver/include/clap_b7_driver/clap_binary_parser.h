@@ -10,6 +10,8 @@
 #include <experimental/optional>
 
 namespace clap_b7 {
+    // Callback function type
+    using receiveCallback = void (*)(const uint8_t* buffer, uint16_t msg_id);
     class  BinaryParser {
     private:
         enum class ParseStatus
@@ -26,6 +28,7 @@ namespace clap_b7 {
         clap_b7::Header header_{};
         bool header_detected_{false};
         void clap_parser();
+        receiveCallback callback_{nullptr};
     public:
         BinaryParser();
         int64_t gnss_unixtime_ns_{0};
@@ -33,8 +36,12 @@ namespace clap_b7 {
         RawImu raw_imu_{};
         BestGnssPos best_gnss_pos_{};
         BestGnssVel best_gnss_vel_{};
+        UniHeading heading_{};
         bool ins_active_{false};
         void received_new_data(const uint8_t* buffer, uint16_t size);
+        void set_receive_callback(receiveCallback callback) {
+            callback_ = callback;
+        }
 
     };
 

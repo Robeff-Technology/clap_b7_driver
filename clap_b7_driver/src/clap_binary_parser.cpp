@@ -11,8 +11,8 @@ constexpr int64_t second_to_nanosecond = 1000000000;
 constexpr int64_t millisecond_to_nanosecond = 1000000;
 constexpr int64_t unix_time_offset = 315964782000000000;
 
-constexpr uint16_t  ins_pvax_id = 1465;
-constexpr uint16_t  rawimu_id = 268;
+constexpr uint16_t ins_pvax_id = 1465;
+constexpr uint16_t rawimu_id = 268;
 constexpr uint16_t bestgnsspos_id = 1429;
 constexpr uint16_t bestgnssvel_id = 1430;
 constexpr uint16_t heading_id = 971;
@@ -74,7 +74,7 @@ namespace clap_b7 {
         return ins.ins_status > 1;
     }
 
-    static int64_t getGpsTimeUnixTime(clap_b7::Header& header)
+    static int64_t gps_time_to_unix_time_ns(clap_b7::Header& header)
     {
         int64_t gps_time = 0;
         gps_time = (header.ref_week_num * 7 * 24 * 60 * 60) * second_to_nanosecond + (header.week_ms * millisecond_to_nanosecond) + unix_time_offset;
@@ -92,38 +92,35 @@ namespace clap_b7 {
     }
 
     void BinaryParser::clap_parser() {
-        clap_b7::Header header;
-        auto search_range = static_cast<int16_t>(data_buffer_.size() - sizeof(clap_b7::Header) + 1);
-        if(search_range > 0 || header_detected_) {
-            if (!header_detected_) {
-                auto search_start = data_buffer_.begin();
-                auto search_end = data_buffer_.begin() + search_range;
-                auto header_start = std::search(search_start, search_end, synchs_control.begin(), synchs_control.end());
-                if (header_start != search_end) {
-                    if (data_buffer_.size() - sizeof(clap_b7::Header) > 0) {
-                        auto header_end = header_start + sizeof(clap_b7::Header);
-                        std::copy(header_start, header_end, reinterpret_cast<uint8_t *>(&header));
-                        header_detected_ = true;
-                    }
+        if (!header_detected_) {
+            auto search_start = data_buffer_.begin();
+            auto search_end = data_buffer_.begin() + sizeof(clap_b7::Header);
+            auto header_start = std::search(search_start, search_end, synchs_control.begin(), synchs_control.end());
+            if (header_start != search_end) {
+
+                auto header_end = header_start + sizeof(clap_b7::Header);
+                std::copy(header_start, header_end, reinterpret_cast<uint8_t *>(&header_));
+                header_detected_ = true;
+                gnss_unixtime_ns_ = gps_time_to_unix_time_ns(header_);
+            }
+        }
+        if (header_detected_) {
+            uint32_t crc;
+            auto crc_start = data_buffer_.begin() + header_.msg_len + header_.header_length;
+            std::copy(crc_start, crc_start + crc_len, reinterpret_cast<uint8_t *>(&crc));
+            uint32_t crc_calculated = calculateCRC32(data_buffer_.data(),
+                                                     header_.msg_len + header_.header_length);
+            if (crc == crc_calculated) {
+                if(callback_ != nullptr) {
+                    callback_(data_buffer_.data() + header_.header_length, header_.msg_id);
+                }
+                data_buffer_.erase(data_buffer_.begin(),
+                                   data_buffer_.begin() + header_.msg_len + header_.header_length + crc_len);
+                header_detected_ = false;
+                if(!data_buffer_.empty()) {
+                    clap_parser();
                 }
             }
-            if (header_detected_) {
-                auto x = data_buffer_.size();
-                if (data_buffer_.size() - (header.msg_len + header.header_length + crc_len) >= 0) {
-                    uint32_t crc;
-                    auto crc_start = data_buffer_.begin() + header.msg_len + header.header_length;
-                    std::copy(crc_start, crc_start + crc_len, reinterpret_cast<uint8_t *>(&crc));
-                    uint32_t crc_calculated = calculateCRC32(data_buffer_.data(),
-                                                             header.msg_len + header.header_length);
-                    if (crc == crc_calculated) {
-                        data_buffer_.erase(data_buffer_.begin(),
-                                           data_buffer_.begin() + header.msg_len + header.header_length + crc_len);
-                        header_detected_ = false;
-                        printf("cozdum\n");
-                    }
-                }
-            }
-            clap_parser();
         }
     }
 

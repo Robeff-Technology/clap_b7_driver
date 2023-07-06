@@ -16,16 +16,16 @@ find_package(geometry_msgs REQUIRED)
 # find_package(<dependency> REQUIRED)
 include_directories(include/clap_b7_driver)
 
-
-
 set(TARGET_SRC
         src/clap_binary_parser.cpp
         src/clap_b7_driver_node.cpp
+        src/clap_b7_driver.cpp
         )
 
 set(TARGET_HEADER
         include/clap_b7_driver/clap_structs.h
-        include/clap_b7_driver/clap_binary_parser.h)
+        include/clap_b7_driver/clap_binary_parser.h
+        include/clap_b7_driver/clap_b7_driver.hpp)
 
 
 add_executable(clap_b7_driver_node
