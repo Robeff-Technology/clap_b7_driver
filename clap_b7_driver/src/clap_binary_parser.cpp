@@ -5,17 +5,13 @@
 #include "clap_b7_driver/clap_structs.h"
 #include "clap_b7_driver/clap_binary_parser.h"
 #include <algorithm>
+#include "rclcpp/rclcpp.hpp"
 
 std::vector<uint8_t> synchs_control = {0xAA, 0x44, 0x12};
 constexpr int64_t second_to_nanosecond = 1000000000;
 constexpr int64_t millisecond_to_nanosecond = 1000000;
 constexpr int64_t unix_time_offset = 315964782000000000;
 
-constexpr uint16_t ins_pvax_id = 1465;
-constexpr uint16_t rawimu_id = 268;
-constexpr uint16_t bestgnsspos_id = 1429;
-constexpr uint16_t bestgnssvel_id = 1430;
-constexpr uint16_t heading_id = 971;
 constexpr uint16_t crc_len = 4;
 
 namespace clap_b7 {
@@ -65,22 +61,12 @@ namespace clap_b7 {
                     0xb40bbe37UL, 0xc30c8ea1UL, 0x5a05df1bUL, 0x2d02ef8dUL
     };
 
-    BinaryParser::BinaryParser() {
-
-    }
-
-    static bool checkInsStatus(clap_b7::InsPvax& ins)
-    {
-        return ins.ins_status > 1;
-    }
-
     static int64_t gps_time_to_unix_time_ns(clap_b7::Header& header)
     {
-        int64_t gps_time = 0;
-        gps_time = (header.ref_week_num * 7 * 24 * 60 * 60) * second_to_nanosecond + (header.week_ms * millisecond_to_nanosecond) + unix_time_offset;
+        int64_t gps_time = (header.ref_week_num * 7 * 24 * 60 * 60) * second_to_nanosecond + (header.week_ms * millisecond_to_nanosecond) + unix_time_offset;
         return gps_time;
     }
-    static uint32_t calculateCRC32(const uint8_t *buffer, int size)
+    static uint32_t calculate_crc32(const uint8_t *buffer, int size)
     {
         int iIndex;
         uint32_t ulCRC = 0;
@@ -92,34 +78,44 @@ namespace clap_b7 {
     }
 
     void BinaryParser::clap_parser() {
-        if (!header_detected_) {
-            auto search_start = data_buffer_.begin();
-            auto search_end = data_buffer_.begin() + sizeof(clap_b7::Header);
-            auto header_start = std::search(search_start, search_end, synchs_control.begin(), synchs_control.end());
-            if (header_start != search_end) {
-
-                auto header_end = header_start + sizeof(clap_b7::Header);
-                std::copy(header_start, header_end, reinterpret_cast<uint8_t *>(&header_));
-                header_detected_ = true;
-                gnss_unixtime_ns_ = gps_time_to_unix_time_ns(header_);
-            }
+        if((!header_detected_ && data_buffer_.size() < sizeof(clap_b7::Header)) ||
+           (header_detected_ && (static_cast<int>(data_buffer_.size()) < header_.header_length + header_.msg_len + crc_len))){
+            return;
         }
-        if (header_detected_) {
-            uint32_t crc;
-            auto crc_start = data_buffer_.begin() + header_.msg_len + header_.header_length;
-            std::copy(crc_start, crc_start + crc_len, reinterpret_cast<uint8_t *>(&crc));
-            uint32_t crc_calculated = calculateCRC32(data_buffer_.data(),
-                                                     header_.msg_len + header_.header_length);
-            if (crc == crc_calculated) {
-                if(callback_ != nullptr) {
-                    callback_(data_buffer_.data() + header_.header_length, header_.msg_id);
+
+        for(size_t i = 0; i < data_buffer_.size();){
+            if(!header_detected_) {
+                auto header = reinterpret_cast<clap_b7::Header *>(data_buffer_.data() + i);
+                if(header->synch_1 == 0xAA && header->synch_2 == 0x44 && header->synch_3 == 0x12 &&  data_buffer_.size() >= sizeof(clap_b7::Header)) {
+                    header_detected_ = true;
+                    header_.header_length = header->header_length;
+                    header_.msg_len = header->msg_len;
+                    header_.msg_id = header->msg_id;
+                    gnss_unix_time_ns_ = gps_time_to_unix_time_ns(*header);
                 }
-                data_buffer_.erase(data_buffer_.begin(),
-                                   data_buffer_.begin() + header_.msg_len + header_.header_length + crc_len);
-                header_detected_ = false;
-                if(!data_buffer_.empty()) {
-                    clap_parser();
+                else {
+                    i++;
                 }
+            }
+            else{
+                    uint32_t crc;
+                    auto header_start_addr = data_buffer_.data() + i;
+                    auto crc_start_addr =  header_start_addr + header_.header_length + header_.msg_len;
+                    std::copy(crc_start_addr, crc_start_addr + crc_len, reinterpret_cast<uint8_t *>(&crc));
+                    uint32_t crc_calculated = calculate_crc32(header_start_addr, header_.header_length + header_.msg_len);
+                    if(crc == crc_calculated) {
+                        if (callback_ != nullptr) {
+                            callback_(header_start_addr + header_.header_length, header_.msg_id);
+                        }
+                        data_buffer_.erase(data_buffer_.begin(),
+                                           data_buffer_.begin() + i + header_.msg_len + header_.header_length + crc_len);
+                        i = 0;
+                        header_detected_ = false;
+                    }
+                    else
+                    {
+                        i++;
+                    }
             }
         }
     }
@@ -127,6 +123,10 @@ namespace clap_b7 {
     void BinaryParser::received_new_data(const uint8_t* buffer, uint16_t size) {
 
         data_buffer_.insert(data_buffer_.end(), buffer, buffer + size);
+
         clap_parser();
+
     }
+
+
 } // namespace clap_b7
