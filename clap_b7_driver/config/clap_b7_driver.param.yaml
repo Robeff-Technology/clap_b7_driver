@@ -1,5 +1,16 @@
 /**:
   ros__parameters:
     serial_config:
-      port: "/dev/ttyUSB16"
-      baudrate: 115200
+      port: "/dev/ttyUSB0"
+      baudrate: 460800
+
+    topic_config:
+      pub_custom_msgs: true
+      pub_standard_msgs: true
+      sub_rtcm_msgs: true
+      rtcm_topic_name: "/sensing/gnss/ntrip/rtcm"
+
+      #TODO : std msgs topic names config with parameters(YEE).
+
+    time_config:
+      use_ros_time: false

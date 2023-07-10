@@ -16,6 +16,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(mavros_msgs REQUIRED)
 
 include_directories(include)
 
@@ -31,7 +32,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
           ${msg_files}
           DEPENDENCIES
             std_msgs
-            geometry_msgs
         )
 ament_export_dependencies(rosidl_default_runtime)
 
@@ -43,6 +43,7 @@ set(TARGET_SRC
         src/AsyncSerial.cpp
         src/clap_msg_wrapper.cpp
         src/clap_config.cpp
+        src/clap_publisher.cpp
         )
 
 add_executable(clap_b7_driver_node
@@ -57,6 +58,7 @@ ament_target_dependencies(clap_b7_driver_node
         tf2_ros
         tf2_msgs
         tf2_geometry_msgs
+        mavros_msgs
         )
 
 install(TARGETS

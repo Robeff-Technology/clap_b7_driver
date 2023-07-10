@@ -22,6 +22,10 @@ namespace clap_b7{
         return ins.ins_status > 1;
     }
 
+    double ClapMsgWrapper::calc_imu_temperature(const clap_b7::RawImu &raw_imu) {
+        return static_cast<double>(((raw_imu.imu_status >> 16U) &  0x000001FFU) / 10.0);
+    }
+
     double ClapMsgWrapper:: raw_acc_to_m_s2(int32_t raw_acc) {
         return static_cast<double>(raw_acc) * accel_scale_factor * hz_to_second;
     }
@@ -218,7 +222,7 @@ namespace clap_b7{
         imu_msg.header = create_header(std::move(frame_id));
 
         imu_msg.imu_status = raw_imu.imu_status & 0x0000FFFFU;
-        imu_msg.imu_temperature = static_cast<double>(((raw_imu.imu_status >> 16U) &  0x0000FFFFU) / 10.0);
+        imu_msg.imu_temperature = calc_imu_temperature(raw_imu);
         imu_msg.x_accel_output = raw_acc_to_m_s2(raw_imu.x_accel_output);
         imu_msg.y_accel_output = raw_acc_to_m_s2(raw_imu.y_accel_output);
         imu_msg.z_accel_output = raw_acc_to_m_s2(raw_imu.z_accel_output);
@@ -258,4 +262,14 @@ namespace clap_b7{
 
         return ins_msg;
     }
+
+    sensor_msgs::msg::Temperature
+    ClapMsgWrapper::create_temperature_msg(const RawImu &raw_imu, std::string frame_id) const {
+        sensor_msgs::msg::Temperature temperature_msg;
+        temperature_msg.header = create_header(std::move(frame_id));
+        temperature_msg.temperature = calc_imu_temperature(raw_imu);
+        return temperature_msg;
+    }
+
+
 } // namespace clap_b7
