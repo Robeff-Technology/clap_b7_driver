@@ -1,3 +1,7 @@
+
+std_msgs/Header header
+
+
 # 0 SOLUTION_COMPUTED
 # 1 INSUFFICIENT_OBS
 # 2 NO_CONVERGENCE

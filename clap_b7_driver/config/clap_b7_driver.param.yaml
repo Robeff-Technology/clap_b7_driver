@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    serial_config:
+      port: "/dev/ttyUSB16"
+      baudrate: 115200

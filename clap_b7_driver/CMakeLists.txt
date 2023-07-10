@@ -15,23 +15,26 @@ find_package(geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
-include_directories(include/clap_b7_driver)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
+include_directories(include)
+
+set(msg_files
         "msg/ClapHeading.msg"
         "msg/ClapGpsPos.msg"
         "msg/ClapGpsVel.msg"
         "msg/ClapImu.msg"
-        DEPENDENCIES
-        builtin_interfaces
+        "msg/ClapIns.msg"
         )
 
+rosidl_generate_interfaces(${PROJECT_NAME}
+          ${msg_files}
+          DEPENDENCIES
+            std_msgs
+            geometry_msgs
+        )
 ament_export_dependencies(rosidl_default_runtime)
+
 
 set(TARGET_SRC
         src/clap_binary_parser.cpp
@@ -39,20 +42,11 @@ set(TARGET_SRC
         src/clap_b7_driver.cpp
         src/AsyncSerial.cpp
         src/clap_msg_wrapper.cpp
+        src/clap_config.cpp
         )
-
-set(TARGET_HEADER
-        include/clap_b7_driver/clap_structs.h
-        include/clap_b7_driver/clap_binary_parser.h
-        include/clap_b7_driver/clap_b7_driver.hpp
-        include/clap_b7_driver/AsyncSerial.h
-        include/clap_b7_driver/clap_msg_wrapper.h
-        )
-
 
 add_executable(clap_b7_driver_node
         ${TARGET_SRC}
-        ${TARGET_HEADER}
         )
 
 ament_target_dependencies(clap_b7_driver_node
@@ -65,24 +59,22 @@ ament_target_dependencies(clap_b7_driver_node
         tf2_geometry_msgs
         )
 
-
-target_include_directories(clap_b7_driver_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-        )
-target_compile_features(clap_b7_driver_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-
 install(TARGETS
         clap_b7_driver_node
         DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY launch
+install(DIRECTORY
+        launch
         DESTINATION share/${PROJECT_NAME}
         )
 
-install(DIRECTORY config
+install(DIRECTORY
+        config
         DESTINATION share/${PROJECT_NAME}
         )
+
+rosidl_target_interfaces(clap_b7_driver_node
+        ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -95,5 +87,4 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
-
 ament_package()

@@ -8,7 +8,6 @@
 #include "clap_b7_driver/clap_structs.h"
 #include <utility>
 #include <vector>
-#include <experimental/optional>
 #include <functional>
 
 namespace clap_b7 {
@@ -19,7 +18,6 @@ namespace clap_b7 {
         bool header_detected_{false};
         void clap_parser();
         std::function<void(const uint8_t *, uint16_t)> callback_{nullptr};
-        size_t header_start_index_{0};
     public:
         BinaryParser() = default;
         enum class MessageId : std::uint16_t{

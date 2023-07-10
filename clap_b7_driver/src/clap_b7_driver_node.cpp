@@ -1,6 +1,7 @@
 #include "clap_b7_driver/clap_b7_driver.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+
 int main(int argc, char ** argv)
 {
     rclcpp::init(argc, argv);

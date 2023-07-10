@@ -1,5 +1,7 @@
 # ADIS16470 IMU
 
+std_msgs/Header header
+
 #0x00000001 Alarm Status Flag
 #0x00000002 reserved
 #0x00000004 reserved
@@ -16,16 +18,22 @@
 #0x00002000 Self Test Failure – Z-axis accelerometer        0 = Passed, 1 = Failed
 uint32 imu_status
 
-float32 imu_temperature
+float64 imu_temperature
 
-float32 z_accel_output
+#(m/s2)
+float64 z_accel_output
 
-float32 y_accel_output
+#(m/s2)
+float64 y_accel_output
 
-float32 x_accel_output
+#(m/s2)
+float64 x_accel_output
 
-float32 z_gyro_output
+#(rad/s)
+float64 z_gyro_output
 
-float32 y_gyro_output
+#(rad/s)
+float64 y_gyro_output
 
-float32 x_gyro_output
+#(rad/s)
+float64 x_gyro_output
