@@ -9,8 +9,12 @@
       pub_standard_msgs: true
       sub_rtcm_msgs: true
       rtcm_topic_name: "/sensing/gnss/ntrip/rtcm"
+      imu_topic: "clap/ros/imu"
+      nav_sat_fix_topic: "clap/ros/gps_nav_sat_fix"
+      twist_topic: "clap/ros/twist_with_covariance_stamped"
 
-      #TODO : std msgs topic names config with parameters(YEE).
+    frame_config:
+      gnss_frame: "GNSS_INS/gnss_ins_link"
 
     time_config:
       use_ros_time: false

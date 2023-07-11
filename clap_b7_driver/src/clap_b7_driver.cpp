@@ -19,7 +19,7 @@ namespace clap_b7{
         }
 
         if(params_.get_pub_std_msgs()){
-            publishers_.init_std_msgs_publisher(*this);
+            publishers_.init_std_msgs_publisher(*this,params_);
         }
 
         if(params_.get_sub_ntrip_msgs()){
@@ -66,17 +66,17 @@ namespace clap_b7{
             case clap_b7::BinaryParser::MessageId::kRAWIMU: {
                 memcpy(&raw_imu_, data, sizeof(RawImu));
 
-                auto msg = msg_wrapper_.create_imu_msg(raw_imu_, "adis16470_imu");
+                auto msg = msg_wrapper_.create_imu_msg(raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_adis16470_imu(msg);
 
-                auto temp_msg = msg_wrapper_.create_temperature_msg(raw_imu_, "adis16470_temp");
+                auto temp_msg = msg_wrapper_.create_temperature_msg(raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_temperature(temp_msg);
                 break;
             }
 
             case clap_b7::BinaryParser::MessageId::kHeading: {
                 memcpy(&heading_, data, sizeof(UniHeading));
-                auto msg = msg_wrapper_.create_gps_heading_msg(heading_, "clap_heading");
+                auto msg = msg_wrapper_.create_gps_heading_msg(heading_, params_.get_gnss_frame());
                 publishers_.publish_heading(msg);
                 break;
             }
@@ -85,13 +85,13 @@ namespace clap_b7{
                 memcpy(&gnss_pos_, data, sizeof(BestGnssPos));
                 sensor_msgs::msg::NavSatFix msg;
                 if(clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
-                    msg = msg_wrapper_.create_nav_sat_fix_msg(ins_pvax_, "gnss");
+                    msg = msg_wrapper_.create_nav_sat_fix_msg(ins_pvax_, params_.get_gnss_frame());
                 }
                 else{
-                    msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, "gnss");
+                    msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, params_.get_gnss_frame());
                 }
 
-                auto custom_msg = msg_wrapper_.create_gps_pos_msg(gnss_pos_, "clap_gnss_pos");
+                auto custom_msg = msg_wrapper_.create_gps_pos_msg(gnss_pos_, params_.get_gnss_frame());
                 publishers_.publish_gps_pos(custom_msg);
                 publishers_.publish_nav_sat_fix(msg);
                 break;
@@ -99,10 +99,10 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kBestGnssVel: {
                 memcpy(&gnss_vel_, data, sizeof(BestGnssVel));
-                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_.z_gyro_output, "gnss");
+                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_.z_gyro_output, params_.get_gnss_frame());
                 publishers_.publish_twist(msg);
 
-                auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, "clap_gnss_vel");
+                auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, params_.get_gnss_frame());
                 publishers_.publish_gps_vel(custom_msg);
                 break;
             }
@@ -110,10 +110,10 @@ namespace clap_b7{
             case clap_b7::BinaryParser::MessageId::kINSPVAX: {
                 memcpy(&ins_pvax_, data, sizeof(InsPvax));
                 if(clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
-                    auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, "gnss");
+                    auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
                     publishers_.publish_imu(msg);
                 }
-                auto custom_msg = msg_wrapper_.create_ins_msg(ins_pvax_, "clap_ins");
+                auto custom_msg = msg_wrapper_.create_ins_msg(ins_pvax_, params_.get_gnss_frame());
                 publishers_.publish_ins(custom_msg);
                 break;
             }
