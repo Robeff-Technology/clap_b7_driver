@@ -60,7 +60,7 @@ namespace clap_b7{
         }
 
         twist_msg.twist.twist.linear.y = 0.0;
-        twist_msg.twist.twist.linear.z = degree2radian(raw_gyro_to_deg_s(z_gyro_raw));
+        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(z_gyro_raw));
 
         twist_msg.twist.covariance[0] = 0.04;
         twist_msg.twist.covariance[7]  = 10000.0;
@@ -103,6 +103,7 @@ namespace clap_b7{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
 
+
         if(gps_pos.pos_type == 56) {
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
         }
@@ -110,7 +111,7 @@ namespace clap_b7{
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
         }
         else {
-            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
         }
 
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
@@ -270,6 +271,14 @@ namespace clap_b7{
         return temperature_msg;
     }
 
+    double ClapMsgWrapper :: add_heading_offset(double heading, double offset) {
+        double heading_offset = heading + offset;
+        if (heading_offset < 0.0) {
+            heading_offset += 360.0;
+        }
+        return heading_offset;
+    }
+
     autoware_sensing_msgs::msg::GnssInsOrientationStamped ClapMsgWrapper::create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const {
         autoware_sensing_msgs::msg::GnssInsOrientationStamped orientation_msg;
         orientation_msg.header = create_header(std::move(frame_id));
@@ -279,7 +288,7 @@ namespace clap_b7{
         * in clap b7 roll-> y-axis pitch-> x axis azimuth->left-handed rotation around z-axis
         * in ros imu msg roll-> x-axis pitch-> y axis azimuth->right-handed rotation around z-axis
         */
-        q.setRPY(degree2radian(heading.pitch), degree2radian(ins.roll), degree2radian(-heading.heading)); //TODO heading offset needed but maybe solved in clap
+        q.setRPY(degree2radian(heading.pitch), degree2radian(ins.roll), degree2radian(-heading.heading));
 
 
 

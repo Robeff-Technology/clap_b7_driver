@@ -61,6 +61,8 @@ namespace clap_b7{
         sensor_msgs::msg::Temperature create_temperature_msg(const RawImu &raw_imu, std::string frame_id) const;
 
         autoware_sensing_msgs::msg::GnssInsOrientationStamped create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const;
+
+        static double add_heading_offset(double heading, double offset);
     };
 
 } // namespace clap_b7

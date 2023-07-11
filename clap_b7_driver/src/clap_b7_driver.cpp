@@ -76,10 +76,11 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kHeading: {
                 memcpy(&heading_, data, sizeof(UniHeading));
+                heading_.heading = static_cast<float>(ClapMsgWrapper::add_heading_offset(heading_.heading, params_.get_true_heading_offset()));
                 auto msg = msg_wrapper_.create_gps_heading_msg(heading_, params_.get_gnss_frame());
                 publishers_.publish_heading(msg);
 
-                auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_,  params_.get_gnss_frame());
+                auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_,params_.get_gnss_frame());
                 publishers_.publish_autoware_orientation(autoware_msg);
                 break;
             }
