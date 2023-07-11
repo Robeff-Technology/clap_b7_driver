@@ -20,6 +20,8 @@
 #include <clap_b7_driver/msg/clap_gps_vel.hpp>
 #include <clap_b7_driver/msg/clap_ins.hpp>
 
+#include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
+
 
 
 namespace clap_b7{
@@ -57,6 +59,8 @@ namespace clap_b7{
         clap_b7_driver::msg::ClapIns create_ins_msg(const InsPvax &ins, std::string frame_id) const;
 
         sensor_msgs::msg::Temperature create_temperature_msg(const RawImu &raw_imu, std::string frame_id) const;
+
+        autoware_sensing_msgs::msg::GnssInsOrientationStamped create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const;
     };
 
 } // namespace clap_b7

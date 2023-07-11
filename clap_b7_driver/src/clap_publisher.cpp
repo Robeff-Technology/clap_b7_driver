@@ -10,10 +10,11 @@ namespace clap_b7 {
         /*
          * std msgs publishers
          */
-        imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
-        nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
-        twist_pub_ = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(params_.get_twist_topic(), max_msg_size_);
         temperature_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Temperature>(params_.get_temperature_topic(), max_msg_size_);
+        twist_pub_ = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(params_.get_twist_topic(), max_msg_size_);
+        nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
+        imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
+        gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
     }
 
     void Publishers::init_custom_msgs_publisher(rclcpp::Node &ref_ros_node) {
@@ -71,6 +72,11 @@ namespace clap_b7 {
     void Publishers::publish_adis16470_imu(const clap_b7_driver::msg::ClapImu& adis16470_imu_msg){
         if(adis16470_imu_pub_){
             adis16470_imu_pub_->publish(adis16470_imu_msg);
+        }
+    }
+    void Publishers::publish_autoware_orientation(const autoware_sensing_msgs::msg::GnssInsOrientationStamped& autoware_orientation_msg){
+        if(gnss_ins_orientation_pub_){
+            gnss_ins_orientation_pub_->publish(autoware_orientation_msg);
         }
     }
 } // namespace clap_b7

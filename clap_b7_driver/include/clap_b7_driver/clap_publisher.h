@@ -19,6 +19,8 @@
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <sensor_msgs/msg/temperature.hpp>
 
+#include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
+
 #include <cstdint>
 
 
@@ -33,6 +35,7 @@ namespace clap_b7{
         rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_pub_;
         rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped >::SharedPtr twist_pub_;
         rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr temperature_pub_;
+        rclcpp::Publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>::SharedPtr gnss_ins_orientation_pub_;
 
         /*
          * Clap msgs Publishers
@@ -58,6 +61,10 @@ namespace clap_b7{
         void publish_ins(const clap_b7_driver::msg::ClapIns& ins_msg);
 
         void publish_temperature(const sensor_msgs::msg::Temperature &temperature_msg);
+
+        void
+        publish_autoware_orientation(
+                const autoware_sensing_msgs::msg::GnssInsOrientationStamped &autoware_orientation_msg);
     };
 
 } // namespace clap_b7

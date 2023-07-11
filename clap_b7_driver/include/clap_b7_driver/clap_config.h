@@ -21,6 +21,7 @@ namespace clap_b7{
         std::string nav_sat_fix_topic_;
         std::string twist_topic_;
         std::string temperature_topic_;
+        std::string autoware_orientation_topic_;
         std::string gnss_frame_;
     public:
         ConfigParams();
@@ -50,6 +51,8 @@ namespace clap_b7{
         std::string get_gnss_frame();
 
         std::string get_temperature_topic();
+
+        std::string get_autoware_orientation_topic();
     };
 }
 #endif//CLAP_CONFIG_H
