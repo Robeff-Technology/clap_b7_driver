@@ -13,7 +13,7 @@ namespace clap_b7 {
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
         nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
         twist_pub_ = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(params_.get_twist_topic(), max_msg_size_);
-        temperature_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Temperature>("clap/ros/temperature", max_msg_size_);
+        temperature_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Temperature>(params_.get_temperature_topic(), max_msg_size_);
     }
 
     void Publishers::init_custom_msgs_publisher(rclcpp::Node &ref_ros_node) {

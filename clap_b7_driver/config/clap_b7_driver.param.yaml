@@ -12,6 +12,7 @@
       imu_topic: "clap/ros/imu"
       nav_sat_fix_topic: "clap/ros/gps_nav_sat_fix"
       twist_topic: "clap/ros/twist_with_covariance_stamped"
+      temperature_topic: "clap/ros/temperature"
 
     frame_config:
       gnss_frame: "GNSS_INS/gnss_ins_link"

@@ -21,6 +21,7 @@ namespace clap_b7{
         node.get_parameter_or<std::string>("topic_config.imu_topic",imu_topic_,"clap/ros/imu");
         node.get_parameter_or<std::string>("topic_config.nav_sat_fix_topic",nav_sat_fix_topic_,"clap/ros/nav_sat_fix");
         node.get_parameter_or<std::string>("topic_config.twist_topic",twist_topic_,"clap/ros/twist");
+        node.get_parameter_or<std::string>("topic_config.temperature_topic",temperature_topic_,"clap/ros/temperature");
         node.get_parameter_or<std::string>("frame_config.gnss_frame",gnss_frame_,"GNSS_INS/gnss_ins_link");
     }
     std::string ConfigParams::get_serial_port() {
@@ -65,5 +66,9 @@ namespace clap_b7{
 
     std::string ConfigParams::get_gnss_frame() {
         return gnss_frame_;
+    }
+
+    std::string ConfigParams::get_temperature_topic() {
+        return temperature_topic_;
     }
 } // namespace clap_b7
