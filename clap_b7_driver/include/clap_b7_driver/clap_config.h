@@ -17,6 +17,11 @@ namespace clap_b7{
         bool pub_std_msgs_;
         bool pub_custom_msgs;
         bool sub_rtcm_msgs;
+        std::string imu_topic_;
+        std::string nav_sat_fix_topic_;
+        std::string twist_topic_;
+        std::string temperature_topic_;
+        std::string gnss_frame_;
     public:
         ConfigParams();
 
@@ -35,6 +40,16 @@ namespace clap_b7{
         bool get_sub_ntrip_msgs();
 
         std::string get_rtcm_topic();
+
+        std::string get_imu_topic();
+
+        std::string get_nav_sat_fix_topic();
+
+        std::string get_twist_topic();
+
+        std::string get_gnss_frame();
+
+        std::string get_temperature_topic();
     };
 }
 #endif//CLAP_CONFIG_H

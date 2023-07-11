@@ -12,6 +12,8 @@
 #include <clap_b7_driver/msg/clap_imu.hpp>
 #include <clap_b7_driver/msg/clap_ins.hpp>
 
+#include <clap_b7_driver/clap_config.h>
+
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
@@ -42,7 +44,7 @@ namespace clap_b7{
         rclcpp::Publisher<clap_b7_driver::msg::ClapIns>::SharedPtr ins_pub_;
     public:
 
-        void init_std_msgs_publisher(rclcpp::Node& ref_ros_node);
+        void init_std_msgs_publisher(rclcpp::Node &ref_ros_node,clap_b7::ConfigParams params_);
         void init_custom_msgs_publisher(rclcpp::Node& ref_ros_node);
 
         void publish_imu(const sensor_msgs::msg::Imu& imu_msg);
