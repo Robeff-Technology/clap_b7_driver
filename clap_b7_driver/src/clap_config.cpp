@@ -24,6 +24,7 @@ namespace clap_b7{
         node.get_parameter_or<std::string>("topic_config.temperature_topic",temperature_topic_,"clap/ros/temperature");
         node.get_parameter_or<std::string>("topic_config.autoware_orientation_topic",autoware_orientation_topic_,"clap/autoware_orientation");
         node.get_parameter_or<std::string>("frame_config.gnss_frame",gnss_frame_,"GNSS_INS/gnss_ins_link");
+        node.get_parameter_or<double>("true_heading_config.true_heading_offset",true_heading_offset_,0.0);
 
     }
     std::string ConfigParams::get_serial_port() {
@@ -77,4 +78,10 @@ namespace clap_b7{
     std::string ConfigParams::get_autoware_orientation_topic(){
         return autoware_orientation_topic_;
     }
+
+    double ConfigParams::get_true_heading_offset() {
+        return true_heading_offset_;
+    }
+
+
 } // namespace clap_b7
