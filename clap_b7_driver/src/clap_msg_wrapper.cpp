@@ -338,9 +338,9 @@ namespace clap_b7{
         odom_msg.twist.twist.linear.x      = ins.east_velocity;
         odom_msg.twist.twist.linear.y      = ins.north_velocity;
         odom_msg.twist.twist.linear.z      = ins.up_velocity;
-        odom_msg.twist.twist.angular.x     = imu.x_gyro_output;
-        odom_msg.twist.twist.angular.y     = imu.y_gyro_output;
-        odom_msg.twist.twist.angular.z     = imu.z_gyro_output;
+        odom_msg.twist.twist.angular.x     = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
+        odom_msg.twist.twist.angular.y     = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
+        odom_msg.twist.twist.angular.z     = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
         odom_msg.twist.covariance[0*6 + 0] = ins.std_dev_east_velocity * ins.std_dev_east_velocity;
         odom_msg.twist.covariance[1*6 + 1] = ins.std_dev_north_velocity * ins.std_dev_north_velocity;
         odom_msg.twist.covariance[2*6 + 2] = ins.std_dev_up_velocity * ins.std_dev_up_velocity;

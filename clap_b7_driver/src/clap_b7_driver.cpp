@@ -32,7 +32,7 @@ namespace clap_b7{
         }
 
         if(params_.get_use_odometry()){
-            ll_to_utm_transform_.initUTM(params_.get_lat_origin(), params_.get_long_origin(), params_.get_alt_origin());
+            ll_to_utm_transform_.set_origin(params_.get_lat_origin(), params_.get_long_origin(), params_.get_alt_origin());
         }
 
         try_serial_connection(params_.get_serial_port(), params_.get_baudrate());

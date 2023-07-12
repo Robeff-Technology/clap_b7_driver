@@ -29,6 +29,8 @@ namespace clap_b7{
         char UTMLetterDesignator(double Lat);
 
         void LLtoUTM(double Lat, double Long, int zoneNumber, double &UTMNorthing, double &UTMEasting) const;
+
+        int find_zone(double Lat, double long_temp) const;
     };
 
 } // namespace clap_b7

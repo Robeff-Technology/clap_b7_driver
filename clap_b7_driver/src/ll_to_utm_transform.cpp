@@ -13,27 +13,9 @@ namespace  clap_b7{
         origin_is_set_ = true;
     }
 
-    void LlToUtmTransform::transform(double lat, double lon, double altitude, double &x, double &y, double &z) const {
-        if(!origin_is_set_){
-            throw std::runtime_error("Origin is not set");
-        }
-
-        double northing = NAN;
-        double easting = NAN;
-        LLtoUTM(lat, lon, m_utm0_.zone, northing, easting);
-        x = easting - m_utm0_.easting;
-        y = northing - m_utm0_.northing;
-        z = altitude - m_utm0_.altitude;
-
-    }
-
-    void LlToUtmTransform::initUTM(double Lat, double Long, double altitude)
-    {
-        int zone_number = 0;
-
-        // Make sure the longitude is between -180.00 .. 179.9
+    int LlToUtmTransform::find_zone(double Lat, double Long) const {
         double long_temp = (Long+180)-int((Long+180)/360)*360-180;
-
+        int zone_number;
         zone_number = int((long_temp + 180)/6) + 1;
 
         if( Lat >= 56.0 && Lat < 64.0 && long_temp >= 3.0 && long_temp < 12.0 )
@@ -50,7 +32,26 @@ namespace  clap_b7{
             else if( long_temp >= 33.0 && long_temp < 42.0 ) zone_number = 37;
         }
 
-        m_utm0_.zone = zone_number;
+        return zone_number;
+    }
+
+    void LlToUtmTransform::transform(double lat, double lon, double altitude, double &x, double &y, double &z) const {
+        if(!origin_is_set_){
+            throw std::runtime_error("Origin is not set");
+        }
+
+        double northing = NAN;
+        double easting = NAN;
+        LLtoUTM(lat, lon, find_zone(lat, lon), northing, easting);
+        x = easting - m_utm0_.easting;
+        y = northing - m_utm0_.northing;
+        z = altitude - m_utm0_.altitude;
+
+    }
+
+    void LlToUtmTransform::initUTM(double Lat, double Long, double altitude)
+    {
+        m_utm0_.zone = find_zone(Lat, Long);
         m_utm0_.altitude = altitude;
         LLtoUTM(Lat, Long, m_utm0_.zone, m_utm0_.northing, m_utm0_.easting);
 
