@@ -2,6 +2,8 @@
 // Created by elaydin on 07.07.2023.
 //
 
+#include <math.h>
+
 #include <clap_b7_driver/clap_b7_driver.hpp>
 
 
@@ -29,7 +31,9 @@ namespace clap_b7{
             RCLCPP_INFO(this->get_logger(), "RTCM subscriber is created %s", params_.get_rtcm_topic().c_str());
         }
 
-
+        if(params_.get_use_odometry()){
+            ll_to_utm_transform_.initUTM(params_.get_lat_origin(), params_.get_long_origin(), params_.get_alt_origin());
+        }
 
         try_serial_connection(params_.get_serial_port(), params_.get_baudrate());
         serial_.setCallback(std::bind(&ClapB7Driver::serial_read_callback, this, std::placeholders::_1, std::placeholders::_2));
@@ -116,6 +120,25 @@ namespace clap_b7{
                 if(clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
                     auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
                     publishers_.publish_imu(msg);
+                    /*
+                     * ODOM
+                     */
+                    if(params_.get_use_odometry()){
+                        double x = NAN;
+                        double y = NAN;
+                        double z = NAN;
+                        try{
+                            ll_to_utm_transform_.transform(ins_pvax_.latitude, ins_pvax_.longitude, ins_pvax_.height, x, y, z);
+                        }
+                        catch(std::runtime_error &exc){
+                            RCLCPP_ERROR(this->get_logger(), "Could not transform from ll to utm(%s)", exc.what());
+                        }
+                        auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, x, y, z, params_.get_odometry_frame(), "base_link");
+                        publishers_.publish_gnss_odom(odom_msg);
+
+                        auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
+                        publishers_.broadcast_transforms(pos_msg);
+                    }
                 }
                 auto custom_msg = msg_wrapper_.create_ins_msg(ins_pvax_, params_.get_gnss_frame());
                 publishers_.publish_ins(custom_msg);

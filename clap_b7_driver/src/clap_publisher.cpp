@@ -15,6 +15,11 @@ namespace clap_b7 {
         nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
         gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
+
+        if(params_.get_use_odometry()){
+            gnss_odom_pub_ = ref_ros_node.create_publisher<nav_msgs::msg::Odometry>(params_.get_odometry_topic(), max_msg_size_);
+            tf_broadcaster_odom_ = std::make_shared<tf2_ros::TransformBroadcaster>(ref_ros_node);
+        }
     }
 
     void Publishers::init_custom_msgs_publisher(rclcpp::Node &ref_ros_node) {
@@ -77,6 +82,18 @@ namespace clap_b7 {
     void Publishers::publish_autoware_orientation(const autoware_sensing_msgs::msg::GnssInsOrientationStamped& autoware_orientation_msg){
         if(gnss_ins_orientation_pub_){
             gnss_ins_orientation_pub_->publish(autoware_orientation_msg);
+        }
+    }
+
+    void Publishers::publish_gnss_odom(const nav_msgs::msg::Odometry& gnss_odom_msg){
+        if(gnss_odom_pub_){
+            gnss_odom_pub_->publish(gnss_odom_msg);
+        }
+    }
+
+    void Publishers::broadcast_transforms(const geometry_msgs::msg::TransformStamped& gnss_odom_tf_){
+        if(tf_broadcaster_odom_){
+            tf_broadcaster_odom_->sendTransform(gnss_odom_tf_);
         }
     }
 } // namespace clap_b7

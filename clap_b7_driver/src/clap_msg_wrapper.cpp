@@ -8,6 +8,8 @@
 
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <GeographicLib/UTMUPS.hpp>
+
 
 constexpr double accel_scale_factor = 0.000000186;
 constexpr double hz_to_second = 100;
@@ -311,5 +313,56 @@ namespace clap_b7{
         return orientation_msg;
     }
 
+    nav_msgs::msg::Odometry ClapMsgWrapper::create_odom_msg(const InsPvax& ins, const RawImu& imu, double x, double y, double z, std::string frame_id, std::string child_frame_id) const {
 
+        nav_msgs::msg::Odometry odom_msg;
+
+        odom_msg.header = create_header(std::move(frame_id));
+
+        odom_msg.child_frame_id = child_frame_id;
+
+
+        odom_msg.pose.pose.position.x = x;
+        odom_msg.pose.pose.position.y = y;
+        odom_msg.pose.pose.position.z = z;
+
+        odom_msg.pose.covariance[0*6 + 0] = 0.001;
+        odom_msg.pose.covariance[1*6 + 1] = 0.001;
+        odom_msg.pose.covariance[2*6 + 2] = 0.001;
+        odom_msg.pose.covariance[3*6 + 3] = ins.std_dev_roll    * ins.std_dev_roll;
+        odom_msg.pose.covariance[4*6 + 4] = ins.std_dev_pitch   * ins.std_dev_pitch;
+        odom_msg.pose.covariance[5*6 + 5] = ins.std_dev_azimuth * ins.std_dev_azimuth;
+
+        //The twist message gives the linear and angular velocity relative to the frame defined in child_frame_id
+        //Lİnear x-y-z hızlari yanlis olabilir
+        odom_msg.twist.twist.linear.x      = ins.east_velocity;
+        odom_msg.twist.twist.linear.y      = ins.north_velocity;
+        odom_msg.twist.twist.linear.z      = ins.up_velocity;
+        odom_msg.twist.twist.angular.x     = imu.x_gyro_output;
+        odom_msg.twist.twist.angular.y     = imu.y_gyro_output;
+        odom_msg.twist.twist.angular.z     = imu.z_gyro_output;
+        odom_msg.twist.covariance[0*6 + 0] = ins.std_dev_east_velocity * ins.std_dev_east_velocity;
+        odom_msg.twist.covariance[1*6 + 1] = ins.std_dev_north_velocity * ins.std_dev_north_velocity;
+        odom_msg.twist.covariance[2*6 + 2] = ins.std_dev_up_velocity * ins.std_dev_up_velocity;
+        odom_msg.twist.covariance[3*6 + 3] = 0;
+        odom_msg.twist.covariance[4*6 + 4] = 0;
+        odom_msg.twist.covariance[5*6 + 5] = 0;
+
+
+
+        return odom_msg;
+    }
+
+    geometry_msgs::msg::TransformStamped ClapMsgWrapper::create_transform(const geometry_msgs::msg::Pose &ref_pose, std::string frame_id, std::string child_frame_id) const{
+        geometry_msgs::msg::TransformStamped transform;
+        transform.header = create_header(std::move(frame_id));
+        transform.child_frame_id = std::move(child_frame_id);
+        transform.transform.translation.x = ref_pose.position.x;
+        transform.transform.translation.y = ref_pose.position.y;
+        transform.transform.translation.z = ref_pose.position.z;
+        transform.transform.rotation.x = ref_pose.orientation.x;
+        transform.transform.rotation.y = ref_pose.orientation.y;
+        transform.transform.rotation.z = ref_pose.orientation.z;
+        return transform;
+    }
 } // namespace clap_b7

@@ -12,7 +12,12 @@
 #include <sensor_msgs/msg/temperature.hpp>
 
 #include <clap_b7_driver/clap_structs.h>
+
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <clap_b7_driver/msg/clap_heading.hpp>
 #include <clap_b7_driver/msg/clap_imu.hpp>
@@ -63,6 +68,15 @@ namespace clap_b7{
         autoware_sensing_msgs::msg::GnssInsOrientationStamped create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const;
 
         static double add_heading_offset(double heading, double offset);
+
+        nav_msgs::msg::Odometry
+        create_odom_msg(const InsPvax &ins, const RawImu &imu, double x, double y, double z, std::string frame_id,
+                        std::string child_frame_id) const;
+
+        geometry_msgs::msg::TransformStamped create_transform(const geometry_msgs::msg::Pose &ref_pose);
+
+        geometry_msgs::msg::TransformStamped
+        create_transform(const geometry_msgs::msg::Pose &ref_pose, std::string frame_id, std::string child_frame_id) const;
     };
 
 } // namespace clap_b7

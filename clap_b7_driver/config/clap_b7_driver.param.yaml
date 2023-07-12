@@ -23,3 +23,11 @@
 
     time_config:
       use_ros_time: false
+
+    odometry_config:
+      use_odometry: false
+      odometry_topic: "clap/ros/odometry"
+      odometry_frame: "odom"
+      latitude: 0.0
+      longitude: 0.0
+      altitude: 0.0

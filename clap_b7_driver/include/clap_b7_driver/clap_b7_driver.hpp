@@ -11,10 +11,13 @@
 #include <clap_b7_driver/clap_structs.h>
 #include <clap_b7_driver/clap_config.h>
 #include <clap_b7_driver/clap_publisher.h>
+#include <clap_b7_driver/ll_to_utm_transform.h>
 
 #include <rclcpp/rclcpp.hpp>
 
 #include <mavros_msgs/msg/rtcm.hpp>
+
+
 
 
 namespace clap_b7
@@ -34,6 +37,7 @@ namespace clap_b7
         rclcpp::TimerBase::SharedPtr timer_;
         ClapMsgWrapper msg_wrapper_{};
         Publishers publishers_{};
+        LlToUtmTransform ll_to_utm_transform_{};
 
         /*
          * Messages

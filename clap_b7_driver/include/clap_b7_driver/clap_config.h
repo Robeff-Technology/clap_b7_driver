@@ -24,6 +24,13 @@ namespace clap_b7{
         std::string autoware_orientation_topic_;
         std::string gnss_frame_;
         double true_heading_offset_;
+
+        bool use_odemetry_;
+        std::string odemetry_topic_;
+        std::string odometry_frame_;
+        double lat_origin_;
+        double long_origin_;
+        double alt_origin_;
     public:
         ConfigParams();
 
@@ -56,6 +63,18 @@ namespace clap_b7{
         std::string get_autoware_orientation_topic();
 
         double get_true_heading_offset();
+
+        bool get_use_odometry();
+
+        std::string get_odometry_topic();
+
+        std::string get_odometry_frame();
+
+        double get_lat_origin();
+
+        double get_long_origin();
+
+        double get_alt_origin();
     };
 }
 #endif//CLAP_CONFIG_H
