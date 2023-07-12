@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     serial_config:
-      port: "/dev/ttyUSB0"
+      port: "/dev/ttyUSB1"
       baudrate: 460800
 
     topic_config:
@@ -19,7 +19,7 @@
       gnss_frame: "GNSS_INS/gnss_ins_link"
 
     true_heading_config:
-      true_heading_offset: 0.0
+      true_heading_offset: 90.0
 
     time_config:
       use_ros_time: false

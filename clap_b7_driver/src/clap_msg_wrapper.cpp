@@ -53,10 +53,10 @@ namespace clap_b7{
         geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
         twist_msg.header = create_header(std::move(frame_id));
         if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
-            twist_msg.twist.twist.linear.x = -gnss_vel.horizontal_speed;
+            twist_msg.twist.twist.linear.x = gnss_vel.horizontal_speed;
         }
         else{
-            twist_msg.twist.twist.linear.x = gnss_vel.horizontal_speed;
+            twist_msg.twist.twist.linear.x = -gnss_vel.horizontal_speed;
         }
 
         twist_msg.twist.twist.linear.y = 0.0;
@@ -75,15 +75,19 @@ namespace clap_b7{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
 
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
-        if(ins.pos_type == 56) {
-            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
-        }
-        else if(ins.pos_type == 54){
-            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
-        }
-        else {
-            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
-        }
+        /*
+        * autoware has bug. When status is staterd with STATUS_FIX, autoware can't initialize.
+        */
+        nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
+//        if(ins.pos_type == 56) {
+//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+//        }
+//        else if(ins.pos_type == 54){
+//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
+//        }
+//        else {
+//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
+//        }
 
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = ins.latitude;
@@ -102,17 +106,20 @@ namespace clap_b7{
     sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::BestGnssPos &gps_pos, std::string frame_id) const{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
+        /*
+         * autoware has bug. When status is staterd with STATUS_FIX, autoware can't initialize.
+         */
+        nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
 
-
-        if(gps_pos.pos_type == 56) {
-            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
-        }
-        else if(gps_pos.pos_type == 54){
-            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
-        }
-        else {
-            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
-        }
+//        if(gps_pos.pos_type == 56) {
+//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+//        }
+//        else if(gps_pos.pos_type == 54){
+//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
+//        }
+//        else {
+//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
+//        }
 
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = gps_pos.latitude;
