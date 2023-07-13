@@ -15,8 +15,8 @@ namespace clap_b7{
         int baudrate_;
         bool use_ros_time_;
         bool pub_std_msgs_;
-        bool pub_custom_msgs;
-        bool sub_rtcm_msgs;
+        bool pub_custom_msgs_;
+        bool sub_rtcm_msgs_;
         std::string imu_topic_;
         std::string nav_sat_fix_topic_;
         std::string twist_topic_;
@@ -25,8 +25,8 @@ namespace clap_b7{
         std::string gnss_frame_;
         double true_heading_offset_;
 
-        bool use_odemetry_;
-        std::string odemetry_topic_;
+        bool use_odometry_;
+        std::string odometry_topic_;
         std::string odometry_frame_;
         double lat_origin_;
         double long_origin_;

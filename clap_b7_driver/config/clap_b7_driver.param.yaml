@@ -28,6 +28,8 @@
       use_odometry: false
       odometry_topic: "clap/ros/odometry"
       odometry_frame: "odom"
+
+    origin_config:
       latitude: 0.0
       longitude: 0.0
       altitude: 0.0
