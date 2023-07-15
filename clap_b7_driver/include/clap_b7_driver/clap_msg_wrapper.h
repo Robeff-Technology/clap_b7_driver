@@ -26,7 +26,7 @@
 #include <clap_b7_driver/msg/clap_ins.hpp>
 
 #include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
-
+#include <Eigen/Dense>
 
 
 namespace clap_b7{
@@ -73,10 +73,12 @@ namespace clap_b7{
         create_odom_msg(const InsPvax &ins, const RawImu &imu, double x, double y, double z, std::string frame_id,
                         std::string child_frame_id) const;
 
-        geometry_msgs::msg::TransformStamped create_transform(const geometry_msgs::msg::Pose &ref_pose);
 
         geometry_msgs::msg::TransformStamped
         create_transform(const geometry_msgs::msg::Pose &ref_pose, std::string frame_id, std::string child_frame_id) const;
+
+        static Eigen::Matrix<double, 3, 3> convert_stddev_llh_to_enu(const Eigen::Matrix<double, 3, 3> &covarianceLLH,
+                                                              const Eigen::Matrix<double, 3, 3> &rotationMatrix);
     };
 
 } // namespace clap_b7

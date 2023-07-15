@@ -11,6 +11,7 @@
 #include <GeographicLib/UTMUPS.hpp>
 
 
+
 constexpr double accel_scale_factor = 0.000000186;
 constexpr double hz_to_second = 100;
 constexpr double gyro_scale_factor = 0.000001006;
@@ -37,6 +38,11 @@ namespace clap_b7{
 
     double ClapMsgWrapper::degree2radian(double degree) {
         return degree * M_PI / 180.0;
+    }
+
+    Eigen::Matrix3d ClapMsgWrapper::convert_stddev_llh_to_enu(const Eigen::Matrix3d& covarianceLLH, const Eigen::Matrix3d& rotationMatrix) {
+        Eigen::Matrix3d covariance_enu = rotationMatrix * covarianceLLH * rotationMatrix.transpose();
+        return covariance_enu;
     }
 
     std_msgs::msg::Header ClapMsgWrapper::create_header(std::string frame_id) const {
@@ -97,9 +103,26 @@ namespace clap_b7{
         nav_sat_fix_msg.altitude = ins.height; //TODO: ~yee sbg altitude = height + undulation ask Leo team
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
 
-        nav_sat_fix_msg.position_covariance[0] = ins.std_dev_latitude * ins.std_dev_latitude;
-        nav_sat_fix_msg.position_covariance[4] = ins.std_dev_longitude * ins.std_dev_longitude;
-        nav_sat_fix_msg.position_covariance[8] = ins.std_dev_height * ins.std_dev_height;
+//        nav_sat_fix_msg.position_covariance[0] = ins.std_dev_latitude * ins.std_dev_latitude;
+//        nav_sat_fix_msg.position_covariance[4] = ins.std_dev_longitude * ins.std_dev_longitude;
+//        nav_sat_fix_msg.position_covariance[8] = ins.std_dev_height * ins.std_dev_height;
+
+        Eigen::Matrix3d covariance_llh;
+        covariance_llh << ins.std_dev_latitude * ins.std_dev_latitude, 0.0, 0.0,
+                          0.0, ins.std_dev_longitude * ins.std_dev_longitude, 0.0,
+                          0.0, 0.0, ins.std_dev_height * ins.std_dev_height;
+
+        Eigen::Matrix3d rotation_matrix;
+        rotation_matrix << 0.0, 1.0, 0.0,
+                          1.0, 0.0, 0.0,
+                          0.0, 0.0, -1.0;
+
+        Eigen::Matrix3d covariance_enu = convert_stddev_llh_to_enu(covariance_llh, rotation_matrix);
+
+        nav_sat_fix_msg.position_covariance[0] = covariance_enu(0, 0);
+        nav_sat_fix_msg.position_covariance[4] = covariance_enu(1, 1);
+        nav_sat_fix_msg.position_covariance[8] = covariance_enu(2, 2);
+
 
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
         return nav_sat_fix_msg;
@@ -126,12 +149,28 @@ namespace clap_b7{
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = gps_pos.latitude;
         nav_sat_fix_msg.longitude = gps_pos.longitude;
-        nav_sat_fix_msg.altitude = gps_pos.height; //TODO: ~yee sbg altitude = height + undulation ask Leo team
+        nav_sat_fix_msg.altitude = gps_pos.height;
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
 
-        nav_sat_fix_msg.position_covariance[0] = gps_pos.std_dev_latitude * gps_pos.std_dev_latitude;
-        nav_sat_fix_msg.position_covariance[4] = gps_pos.std_dev_longitude * gps_pos.std_dev_longitude;
-        nav_sat_fix_msg.position_covariance[8] = gps_pos.std_dev_height * gps_pos.std_dev_height;
+//        nav_sat_fix_msg.position_covariance[0] = gps_pos.std_dev_latitude * gps_pos.std_dev_latitude;
+//        nav_sat_fix_msg.position_covariance[4] = gps_pos.std_dev_longitude * gps_pos.std_dev_longitude;
+//        nav_sat_fix_msg.position_covariance[8] = gps_pos.std_dev_height * gps_pos.std_dev_height;
+
+        Eigen::Matrix3d covariance_llh;
+        covariance_llh << gps_pos.std_dev_latitude * gps_pos.std_dev_latitude, 0.0, 0.0,
+                0.0, gps_pos.std_dev_longitude * gps_pos.std_dev_longitude, 0.0,
+                0.0, 0.0, gps_pos.std_dev_height * gps_pos.std_dev_height;
+
+        Eigen::Matrix3d rotation_matrix;
+        rotation_matrix << 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0,
+                0.0, 0.0, -1.0;
+
+        Eigen::Matrix3d covariance_enu = convert_stddev_llh_to_enu(covariance_llh, rotation_matrix);
+
+        nav_sat_fix_msg.position_covariance[0] = covariance_enu(0, 0);
+        nav_sat_fix_msg.position_covariance[4] = covariance_enu(1, 1);
+        nav_sat_fix_msg.position_covariance[8] = covariance_enu(2, 2);
 
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
         return nav_sat_fix_msg;
@@ -360,9 +399,11 @@ namespace clap_b7{
         transform.transform.translation.x = ref_pose.position.x;
         transform.transform.translation.y = ref_pose.position.y;
         transform.transform.translation.z = ref_pose.position.z;
+
         transform.transform.rotation.x = ref_pose.orientation.x;
         transform.transform.rotation.y = ref_pose.orientation.y;
         transform.transform.rotation.z = ref_pose.orientation.z;
+        transform.transform.rotation.w = ref_pose.orientation.w;
         return transform;
     }
 } // namespace clap_b7
