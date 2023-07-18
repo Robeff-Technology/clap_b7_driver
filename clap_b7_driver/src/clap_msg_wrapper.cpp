@@ -352,7 +352,7 @@ namespace clap_b7{
         return orientation_msg;
     }
 
-    nav_msgs::msg::Odometry ClapMsgWrapper::create_odom_msg(const InsPvax& ins, const RawImu& imu, double x, double y, double z, std::string frame_id, std::string child_frame_id) const {
+    nav_msgs::msg::Odometry ClapMsgWrapper::create_odom_msg(const InsPvax& ins, const RawImu& imu, float heading, const BestGnssVel &gnss_vel, double x, double y, double z, std::string frame_id, std::string child_frame_id) const {
 
         nav_msgs::msg::Odometry odom_msg;
 
@@ -374,9 +374,14 @@ namespace clap_b7{
 
         //The twist message gives the linear and angular velocity relative to the frame defined in child_frame_id
         //Lİnear x-y-z hızlari yanlis olabilir
-        odom_msg.twist.twist.linear.x      = ins.east_velocity;
-        odom_msg.twist.twist.linear.y      = ins.north_velocity;
-        odom_msg.twist.twist.linear.z      = ins.up_velocity;
+        if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
+            odom_msg.twist.twist.linear.x = gnss_vel.horizontal_speed;
+        }
+        else{
+            odom_msg.twist.twist.linear.x = -gnss_vel.horizontal_speed;
+        }
+        odom_msg.twist.twist.linear.y      = 0;
+        odom_msg.twist.twist.linear.z      = 0;
         odom_msg.twist.twist.angular.x     = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
         odom_msg.twist.twist.angular.y     = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
         odom_msg.twist.twist.angular.z     = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));

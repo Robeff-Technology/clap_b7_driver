@@ -133,7 +133,7 @@ namespace clap_b7{
                         catch(std::runtime_error &exc){
                             RCLCPP_ERROR(this->get_logger(), "Could not transform from ll to utm(%s)", exc.what());
                         }
-                        auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, x, y, z, params_.get_odometry_frame(), "base_link");
+                        auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, heading_.heading, gnss_vel_, x, y, z, params_.get_odometry_frame(), "base_link");
                         publishers_.publish_gnss_odom(odom_msg);
 
                         auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");

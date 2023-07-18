@@ -69,16 +69,16 @@ namespace clap_b7{
 
         static double add_heading_offset(double heading, double offset);
 
-        nav_msgs::msg::Odometry
-        create_odom_msg(const InsPvax &ins, const RawImu &imu, double x, double y, double z, std::string frame_id,
-                        std::string child_frame_id) const;
-
-
         geometry_msgs::msg::TransformStamped
         create_transform(const geometry_msgs::msg::Pose &ref_pose, std::string frame_id, std::string child_frame_id) const;
 
         static Eigen::Matrix<double, 3, 3> convert_stddev_llh_to_enu(const Eigen::Matrix<double, 3, 3> &covarianceLLH,
                                                               const Eigen::Matrix<double, 3, 3> &rotationMatrix);
+
+        nav_msgs::msg::Odometry
+        create_odom_msg(const InsPvax &ins, const RawImu &imu, float heading, const BestGnssVel &gnss_vel, double x,
+                        double y,
+                        double z, std::string frame_id, std::string child_frame_id) const;
     };
 
 } // namespace clap_b7
