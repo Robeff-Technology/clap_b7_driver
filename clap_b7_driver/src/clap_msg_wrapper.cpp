@@ -87,7 +87,7 @@ namespace clap_b7{
         if(ins.pos_type == 56 || ins.pos_type == 55) {
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
         }
-        else if(ins.pos_type == 54){
+        else if(ins.pos_type == 54) {
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
         }
         else if(ins.pos_type < 54 && ins.pos_type >= 52){
@@ -194,21 +194,22 @@ namespace clap_b7{
         imu_msg.angular_velocity.y = -1.0 * degree2radian(raw_gyro_to_deg_s(raw_imu.y_gyro_output));
         imu_msg.angular_velocity.z = degree2radian(raw_gyro_to_deg_s(raw_imu.z_gyro_output));
 
-        imu_msg.linear_acceleration.x = degree2radian(raw_acc_to_m_s2(raw_imu.x_accel_output));
-        imu_msg.linear_acceleration.y = degree2radian(raw_acc_to_m_s2(raw_imu.y_accel_output));
-        imu_msg.linear_acceleration.z = degree2radian(raw_acc_to_m_s2(raw_imu.z_accel_output));
+        imu_msg.linear_acceleration.x = raw_acc_to_m_s2(raw_imu.x_accel_output);
+        imu_msg.linear_acceleration.y = -1.0 * raw_acc_to_m_s2(raw_imu.y_accel_output);
+        imu_msg.linear_acceleration.z = raw_acc_to_m_s2(raw_imu.z_accel_output);
 
         imu_msg.orientation_covariance[0] = ins.std_dev_pitch * ins.std_dev_pitch;
         imu_msg.orientation_covariance[4] = ins.std_dev_roll * ins.std_dev_roll;
-        imu_msg.orientation_covariance[8] = ins.std_dev_pitch * ins.std_dev_pitch;
+        imu_msg.orientation_covariance[8] = ins.std_dev_azimuth * ins.std_dev_azimuth;
 
         /*
          * angular velocity and linear acceleration covariance is not provided by clap b7
          */
-        for(size_t i = 0; i < 9; i++){
-            imu_msg.angular_velocity_covariance[i] = 0.0;
-            imu_msg.linear_acceleration_covariance[i] = 0.0;
+        for(size_t i = 0; i < 9; i += 4){
+            imu_msg.angular_velocity_covariance[i] = 0.01;
+            imu_msg.linear_acceleration_covariance[i] = 0.01;
         }
+
         return imu_msg;
     }
 
@@ -385,12 +386,13 @@ namespace clap_b7{
         odom_msg.twist.twist.angular.x     = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
         odom_msg.twist.twist.angular.y     = -1.0 * degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
         odom_msg.twist.twist.angular.z     = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
+
         odom_msg.twist.covariance[0*6 + 0] = ins.std_dev_east_velocity * ins.std_dev_east_velocity;
         odom_msg.twist.covariance[1*6 + 1] = ins.std_dev_north_velocity * ins.std_dev_north_velocity;
         odom_msg.twist.covariance[2*6 + 2] = ins.std_dev_up_velocity * ins.std_dev_up_velocity;
-        odom_msg.twist.covariance[3*6 + 3] = 0;
-        odom_msg.twist.covariance[4*6 + 4] = 0;
-        odom_msg.twist.covariance[5*6 + 5] = 0;
+        odom_msg.twist.covariance[3*6 + 3] = 0.01;
+        odom_msg.twist.covariance[4*6 + 4] = 0.01;
+        odom_msg.twist.covariance[5*6 + 5] = 0.01;
 
 
 
