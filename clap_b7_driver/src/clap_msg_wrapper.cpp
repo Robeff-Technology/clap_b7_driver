@@ -83,19 +83,19 @@ namespace clap_b7{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
 
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
-        /*
-        * autoware has bug. When status is staterd with STATUS_FIX, autoware can't initialize.
-        */
-        nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
-//        if(ins.pos_type == 56) {
-//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
-//        }
-//        else if(ins.pos_type == 54){
-//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
-//        }
-//        else {
-//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
-//        }
+
+        if(ins.pos_type == 56 || ins.pos_type == 55) {
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+        }
+        else if(ins.pos_type == 54){
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
+        }
+        else if(ins.pos_type < 54 && ins.pos_type >= 52){
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
+        }
+        else {
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
+        }
 
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = ins.latitude;
@@ -131,20 +131,20 @@ namespace clap_b7{
     sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::BestGnssPos &gps_pos, std::string frame_id) const{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
-        /*
-         * autoware has bug. When status is staterd with STATUS_FIX, autoware can't initialize.
-         */
-        nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
 
-//        if(gps_pos.pos_type == 56) {
-//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
-//        }
-//        else if(gps_pos.pos_type == 54){
-//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
-//        }
-//        else {
-//            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
-//        }
+        if(gps_pos.pos_type == 56 || gps_pos.pos_type == 55) {
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
+        }
+        else if(gps_pos.pos_type == 54){
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
+        }
+        else if(gps_pos.pos_type < 54 && gps_pos.pos_type >= 52){
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
+        }
+        else {
+            nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
+        }
+
 
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = gps_pos.latitude;
@@ -191,7 +191,7 @@ namespace clap_b7{
         imu_msg.orientation.z = q.getZ();
 
         imu_msg.angular_velocity.x = degree2radian(raw_gyro_to_deg_s(raw_imu.x_gyro_output));
-        imu_msg.angular_velocity.y = degree2radian(raw_gyro_to_deg_s(raw_imu.y_gyro_output));
+        imu_msg.angular_velocity.y = -1.0 * degree2radian(raw_gyro_to_deg_s(raw_imu.y_gyro_output));
         imu_msg.angular_velocity.z = degree2radian(raw_gyro_to_deg_s(raw_imu.z_gyro_output));
 
         imu_msg.linear_acceleration.x = degree2radian(raw_acc_to_m_s2(raw_imu.x_accel_output));
@@ -273,11 +273,11 @@ namespace clap_b7{
         imu_msg.imu_status = raw_imu.imu_status & 0x0000FFFFU;
         imu_msg.imu_temperature = calc_imu_temperature(raw_imu);
         imu_msg.x_accel_output = raw_acc_to_m_s2(raw_imu.x_accel_output);
-        imu_msg.y_accel_output = raw_acc_to_m_s2(raw_imu.y_accel_output);
+        imu_msg.y_accel_output = -1.0 * raw_acc_to_m_s2(raw_imu.y_accel_output);
         imu_msg.z_accel_output = raw_acc_to_m_s2(raw_imu.z_accel_output);
 
         imu_msg.x_gyro_output = degree2radian(raw_gyro_to_deg_s(raw_imu.x_gyro_output));
-        imu_msg.y_gyro_output = degree2radian(raw_gyro_to_deg_s(raw_imu.y_gyro_output));
+        imu_msg.y_gyro_output = -1.0 * degree2radian(raw_gyro_to_deg_s(raw_imu.y_gyro_output));
         imu_msg.z_gyro_output = degree2radian(raw_gyro_to_deg_s(raw_imu.z_gyro_output));
 
         return imu_msg;
@@ -360,30 +360,30 @@ namespace clap_b7{
 
         odom_msg.child_frame_id = child_frame_id;
 
+        tf2::Quaternion q;
+
+        /*
+        * in clap b7 roll-> y-axis pitch-> x axis azimuth->left-handed rotation around z-axis
+        * in ros imu msg roll-> x-axis pitch-> y axis azimuth->right-handed rotation around z-axis
+        */
+        q.setRPY(degree2radian(ins.pitch), degree2radian(ins.roll), degree2radian(-ins.azimuth));
+
+        odom_msg.pose.pose.orientation.x = q.x();
+        odom_msg.pose.pose.orientation.y = q.y();
+        odom_msg.pose.pose.orientation.z = q.z();
+        odom_msg.pose.pose.orientation.w = q.w();
+
 
         odom_msg.pose.pose.position.x = x;
         odom_msg.pose.pose.position.y = y;
         odom_msg.pose.pose.position.z = z;
 
-        odom_msg.pose.covariance[0*6 + 0] = 0.001;
-        odom_msg.pose.covariance[1*6 + 1] = 0.001;
-        odom_msg.pose.covariance[2*6 + 2] = 0.001;
-        odom_msg.pose.covariance[3*6 + 3] = ins.std_dev_roll    * ins.std_dev_roll;
-        odom_msg.pose.covariance[4*6 + 4] = ins.std_dev_pitch   * ins.std_dev_pitch;
-        odom_msg.pose.covariance[5*6 + 5] = ins.std_dev_azimuth * ins.std_dev_azimuth;
+        odom_msg.twist.twist.linear.x      = ins.east_velocity;
+        odom_msg.twist.twist.linear.y      = ins.north_velocity;
+        odom_msg.twist.twist.linear.z      = ins.up_velocity;
 
-        //The twist message gives the linear and angular velocity relative to the frame defined in child_frame_id
-        //Lİnear x-y-z hızlari yanlis olabilir
-        if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
-            odom_msg.twist.twist.linear.x = gnss_vel.horizontal_speed;
-        }
-        else{
-            odom_msg.twist.twist.linear.x = -gnss_vel.horizontal_speed;
-        }
-        odom_msg.twist.twist.linear.y      = 0;
-        odom_msg.twist.twist.linear.z      = 0;
         odom_msg.twist.twist.angular.x     = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
-        odom_msg.twist.twist.angular.y     = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
+        odom_msg.twist.twist.angular.y     = -1.0 * degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
         odom_msg.twist.twist.angular.z     = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
         odom_msg.twist.covariance[0*6 + 0] = ins.std_dev_east_velocity * ins.std_dev_east_velocity;
         odom_msg.twist.covariance[1*6 + 1] = ins.std_dev_north_velocity * ins.std_dev_north_velocity;

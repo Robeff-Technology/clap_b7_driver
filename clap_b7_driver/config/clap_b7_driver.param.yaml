@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     serial_config:
-      port: "/dev/ttyUSB1"
+      port: "/dev/ttyUSB0"
       baudrate: 460800
 
     topic_config:
