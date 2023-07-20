@@ -47,6 +47,7 @@ namespace clap_b7
         BestGnssPos gnss_pos_{};
         BestGnssVel gnss_vel_{};
         UniHeading heading_{};
+        ECEF ecef_{};
 
         /*
          * Config

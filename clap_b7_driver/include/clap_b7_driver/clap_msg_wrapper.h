@@ -24,6 +24,7 @@
 #include <clap_b7_driver/msg/clap_gps_pos.hpp>
 #include <clap_b7_driver/msg/clap_gps_vel.hpp>
 #include <clap_b7_driver/msg/clap_ins.hpp>
+#include <clap_b7_driver/msg/clap_ecef.hpp>
 
 #include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
 #include <Eigen/Dense>
@@ -46,7 +47,7 @@ namespace clap_b7{
         static bool is_ins_active(const clap_b7::InsPvax& ins);
         static double calc_imu_temperature(const clap_b7::RawImu& raw_imu);
         sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const InsPvax& ins, std::string frame_id) const;
-        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const BestGnssPos& ins, std::string frame_id) const;
+        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const BestGnssPos& gps_pos, std::string frame_id) const;
 
         geometry_msgs::msg::TwistWithCovarianceStamped
         create_twist_msg(const BestGnssVel& gnss_vel, float heading, int32_t z_gyro_raw, std::string frame_id) const;
@@ -79,6 +80,11 @@ namespace clap_b7{
         create_odom_msg(const InsPvax &ins, const RawImu &imu, float heading, const BestGnssVel &gnss_vel, double x,
                         double y,
                         double z, std::string frame_id, std::string child_frame_id) const;
+
+        geometry_msgs::msg::TwistWithCovarianceStamped
+        create_twist_msg(const ECEF &ecef, int32_t z_gyro_raw, std::string frame_id) const;
+
+        clap_b7_driver::msg::ClapECEF create_ecef_msg(const ECEF &ecef) const;
     };
 
 } // namespace clap_b7

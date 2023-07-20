@@ -12,6 +12,7 @@ namespace clap_b7 {
          */
         temperature_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Temperature>(params_.get_temperature_topic(), max_msg_size_);
         twist_pub_ = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(params_.get_twist_topic(), max_msg_size_);
+        twist_pub_ecef = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("ecef_twist", max_msg_size_);
         nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
         gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
@@ -30,6 +31,7 @@ namespace clap_b7 {
         gps_vel_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapGpsVel>("clap/clap_gnss_vel", max_msg_size_);
         adis16470_imu_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapImu>("clap/clap_adis16470", max_msg_size_);
         ins_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapIns>("clap/clap_ins", max_msg_size_);
+        pub_ecef = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapECEF>("ecef_pos", max_msg_size_);
     }
 
     void Publishers::publish_ins(const clap_b7_driver::msg::ClapIns &ins_msg) {
@@ -94,6 +96,18 @@ namespace clap_b7 {
     void Publishers::broadcast_transforms(const geometry_msgs::msg::TransformStamped& gnss_odom_tf_){
         if(tf_broadcaster_odom_){
             tf_broadcaster_odom_->sendTransform(gnss_odom_tf_);
+        }
+    }
+
+    void Publishers:: publish_ecef(const clap_b7_driver::msg::ClapECEF& ecef_msg){
+        if(pub_ecef) {
+            pub_ecef->publish(ecef_msg);
+        }
+    }
+
+    void Publishers:: publish_twist_ecef(const geometry_msgs::msg::TwistWithCovarianceStamped& twist_msg){
+        if(twist_pub_ecef) {
+            twist_pub_ecef->publish(twist_msg);
         }
     }
 } // namespace clap_b7

@@ -144,6 +144,15 @@ namespace clap_b7{
                 publishers_.publish_ins(custom_msg);
                 break;
             }
+
+            case clap_b7::BinaryParser::MessageId::kECEF: {
+                memcpy(&ecef_, data, sizeof(ECEF));
+                auto msg = msg_wrapper_.create_ecef_msg(ecef_);
+                publishers_.publish_ecef(msg);
+                auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_.z_gyro_output, params_.get_gnss_frame());
+                publishers_.publish_twist_ecef(twist_msg);
+                break;
+            }
         }
     }
     void ClapB7Driver::serial_read_callback(const char *data, size_t len) {

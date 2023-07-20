@@ -26,7 +26,8 @@ namespace clap_b7{
     }
 
     double ClapMsgWrapper::calc_imu_temperature(const clap_b7::RawImu &raw_imu) {
-        return static_cast<double>(((raw_imu.imu_status >> 16U) &  0x000001FFU) / 10.0);
+        auto raw_temperature = static_cast<int16_t>((raw_imu.imu_status >> 16U) & 0xFFFFU);
+        return static_cast<double>(raw_temperature) * 0.1;
     }
 
     double ClapMsgWrapper:: raw_acc_to_m_s2(int32_t raw_acc) {
@@ -150,11 +151,7 @@ namespace clap_b7{
         nav_sat_fix_msg.latitude = gps_pos.latitude;
         nav_sat_fix_msg.longitude = gps_pos.longitude;
         nav_sat_fix_msg.altitude = gps_pos.height;
-        nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
 
-//        nav_sat_fix_msg.position_covariance[0] = gps_pos.std_dev_latitude * gps_pos.std_dev_latitude;
-//        nav_sat_fix_msg.position_covariance[4] = gps_pos.std_dev_longitude * gps_pos.std_dev_longitude;
-//        nav_sat_fix_msg.position_covariance[8] = gps_pos.std_dev_height * gps_pos.std_dev_height;
 
         Eigen::Matrix3d covariance_llh;
         covariance_llh << gps_pos.std_dev_latitude * gps_pos.std_dev_latitude, 0.0, 0.0,
@@ -412,5 +409,47 @@ namespace clap_b7{
         transform.transform.rotation.z = ref_pose.orientation.z;
         transform.transform.rotation.w = ref_pose.orientation.w;
         return transform;
+    }
+
+    clap_b7_driver::msg::ClapECEF ClapMsgWrapper::create_ecef_msg(const ECEF & ecef) const{
+        clap_b7_driver::msg::ClapECEF ecef_msg;
+        ecef_msg.pos_x = ecef.pos_x;
+        ecef_msg.pos_y = ecef.pos_y;
+        ecef_msg.pos_z = ecef.pos_z;
+
+        ecef_msg.pos_type = ecef.pos_type;
+        ecef_msg.sol_status = ecef.sol_status;
+
+        ecef_msg.std_pos_x = ecef.std_pos_x;
+        ecef_msg.std_pos_y = ecef.std_pos_y;
+        ecef_msg.std_pos_z = ecef.std_pos_z;
+        ecef_msg.v_sol_status = ecef.v_sol_status;
+        ecef_msg.vel_type = ecef.vel_type;
+        ecef_msg.vel_x = ecef.vel_x;
+        ecef_msg.vel_y = ecef.vel_y;
+        ecef_msg.vel_z = ecef.vel_z;
+        ecef_msg.std_vel_x = ecef.std_vel_x;
+        ecef_msg.std_vel_y = ecef.std_vel_y;
+        ecef_msg.std_vel_z = ecef.std_vel_z;
+        return ecef_msg;
+    }
+
+    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const ECEF & ecef, int32_t z_gyro_raw, std::string frame_id) const{
+        geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
+        twist_msg.header = create_header(std::move(frame_id));
+
+        twist_msg.twist.twist.linear.x = ecef.vel_x;
+        twist_msg.twist.twist.linear.y = ecef.vel_y;
+        twist_msg.twist.twist.linear.z = ecef.vel_z;
+
+        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(z_gyro_raw));
+
+        twist_msg.twist.covariance[0] = ecef.std_vel_x;
+        twist_msg.twist.covariance[7]  = ecef.std_vel_y;
+        twist_msg.twist.covariance[14] = ecef.std_vel_z;
+        twist_msg.twist.covariance[21] = 0.0;
+        twist_msg.twist.covariance[28] = 0.0;
+        twist_msg.twist.covariance[35] = 0.0;
+        return twist_msg;
     }
 } // namespace clap_b7

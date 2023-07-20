@@ -30,6 +30,7 @@ set(msg_files
         "msg/ClapGpsVel.msg"
         "msg/ClapImu.msg"
         "msg/ClapIns.msg"
+        "msg/ClapECEF.msg"
         )
 
 
