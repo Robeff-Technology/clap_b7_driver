@@ -33,6 +33,15 @@ namespace clap_b7{
 
         if(params_.get_use_odometry()){
             ll_to_utm_transform_.set_origin(params_.get_lat_origin(), params_.get_long_origin(), params_.get_alt_origin());
+
+
+            geometry_msgs::msg::Pose pos_msg;
+            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.easting;
+            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.northing;
+            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.altitude;
+
+            auto msg = msg_wrapper_.create_transform(pos_msg, params_.get_odometry_frame(), "base_link");
+            publishers_.broadcast_static_transform(msg);
         }
 
         try_serial_connection(params_.get_serial_port(), params_.get_baudrate());
@@ -107,7 +116,7 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kBestGnssVel: {
                 memcpy(&gnss_vel_, data, sizeof(BestGnssVel));
-                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_.z_gyro_output, params_.get_gnss_frame());
+                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_twist(msg);
 
                 auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, params_.get_gnss_frame());
@@ -133,7 +142,7 @@ namespace clap_b7{
                         catch(std::runtime_error &exc){
                             RCLCPP_ERROR(this->get_logger(), "Could not transform from ll to utm(%s)", exc.what());
                         }
-                        auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, heading_.heading, gnss_vel_, x, y, z, params_.get_odometry_frame(), "base_link");
+                        auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, x, y, z, params_.get_odometry_frame(), "base_link");
                         publishers_.publish_gnss_odom(odom_msg);
 
                         auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
@@ -149,7 +158,7 @@ namespace clap_b7{
                 memcpy(&ecef_, data, sizeof(ECEF));
                 auto msg = msg_wrapper_.create_ecef_msg(ecef_);
                 publishers_.publish_ecef(msg);
-                auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_.z_gyro_output, params_.get_gnss_frame());
+                auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_twist_ecef(twist_msg);
                 break;
             }

@@ -58,7 +58,7 @@ namespace clap_b7{
         return header;
     }
 
-    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const clap_b7::BestGnssVel& gnss_vel, float heading, int32_t z_gyro_raw, std::string frame_id) const{
+    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const clap_b7::BestGnssVel& gnss_vel, float heading, const clap_b7::RawImu& imu, std::string frame_id) const{
         geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
         twist_msg.header = create_header(std::move(frame_id));
         if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
@@ -69,7 +69,11 @@ namespace clap_b7{
         }
 
         twist_msg.twist.twist.linear.y = 0.0;
-        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(z_gyro_raw));
+        twist_msg.twist.twist.linear.z = 0.0;
+
+        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
+        twist_msg.twist.twist.angular.y = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
+        twist_msg.twist.twist.angular.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
 
         twist_msg.twist.covariance[0] = 0.04;
         twist_msg.twist.covariance[7]  = 10000.0;
@@ -101,12 +105,8 @@ namespace clap_b7{
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = ins.latitude;
         nav_sat_fix_msg.longitude = ins.longitude;
-        nav_sat_fix_msg.altitude = ins.height; //TODO: ~yee sbg altitude = height + undulation ask Leo team
+        nav_sat_fix_msg.altitude = ins.height;
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
-
-//        nav_sat_fix_msg.position_covariance[0] = ins.std_dev_latitude * ins.std_dev_latitude;
-//        nav_sat_fix_msg.position_covariance[4] = ins.std_dev_longitude * ins.std_dev_longitude;
-//        nav_sat_fix_msg.position_covariance[8] = ins.std_dev_height * ins.std_dev_height;
 
         Eigen::Matrix3d covariance_llh;
         covariance_llh << ins.std_dev_latitude * ins.std_dev_latitude, 0.0, 0.0,
@@ -336,12 +336,11 @@ namespace clap_b7{
         */
         q.setRPY(degree2radian(heading.pitch), degree2radian(ins.roll), degree2radian(-heading.heading));
 
-
-
         orientation_msg.orientation.orientation.x = q.x();
         orientation_msg.orientation.orientation.y = q.y();
         orientation_msg.orientation.orientation.z = q.z();
         orientation_msg.orientation.orientation.w = q.w();
+
 
         orientation_msg.orientation.rmse_rotation_x = heading.std_dev_pitch * heading.std_dev_pitch;
         orientation_msg.orientation.rmse_rotation_y = ins.std_dev_roll * ins.std_dev_roll;
@@ -350,7 +349,7 @@ namespace clap_b7{
         return orientation_msg;
     }
 
-    nav_msgs::msg::Odometry ClapMsgWrapper::create_odom_msg(const InsPvax& ins, const RawImu& imu, float heading, const BestGnssVel &gnss_vel, double x, double y, double z, std::string frame_id, std::string child_frame_id) const {
+    nav_msgs::msg::Odometry ClapMsgWrapper::create_odom_msg(const InsPvax& ins, const RawImu& imu, double x, double y, double z, std::string frame_id, std::string child_frame_id) const {
 
         nav_msgs::msg::Odometry odom_msg;
 
@@ -390,8 +389,6 @@ namespace clap_b7{
         odom_msg.twist.covariance[3*6 + 3] = 0.01;
         odom_msg.twist.covariance[4*6 + 4] = 0.01;
         odom_msg.twist.covariance[5*6 + 5] = 0.01;
-
-
 
         return odom_msg;
     }
@@ -434,7 +431,7 @@ namespace clap_b7{
         return ecef_msg;
     }
 
-    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const ECEF & ecef, int32_t z_gyro_raw, std::string frame_id) const{
+    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const ECEF & ecef, const RawImu& imu, std::string frame_id) const{
         geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
         twist_msg.header = create_header(std::move(frame_id));
 
@@ -442,7 +439,9 @@ namespace clap_b7{
         twist_msg.twist.twist.linear.y = ecef.vel_y;
         twist_msg.twist.twist.linear.z = ecef.vel_z;
 
-        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(z_gyro_raw));
+        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
+        twist_msg.twist.twist.angular.y = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
+        twist_msg.twist.twist.angular.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
 
         twist_msg.twist.covariance[0] = ecef.std_vel_x;
         twist_msg.twist.covariance[7]  = ecef.std_vel_y;

@@ -23,6 +23,7 @@
 
 #include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 #include <cstdint>
 
@@ -42,6 +43,7 @@ namespace clap_b7{
         rclcpp::Publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>::SharedPtr gnss_ins_orientation_pub_;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr gnss_odom_pub_;
         std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_odom_;
+        std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
 
         /*
          * Clap msgs Publishers
@@ -80,6 +82,8 @@ namespace clap_b7{
         void publish_ecef(const clap_b7_driver::msg::ClapECEF &ecef_msg);
 
         void publish_twist_ecef(const geometry_msgs::msg::TwistWithCovarianceStamped &twist_msg);
+
+        void broadcast_static_transform(const geometry_msgs::msg::TransformStamped &gnss_odom_tf_);
     };
 
 } // namespace clap_b7

@@ -16,7 +16,7 @@ namespace clap_b7{
             double altitude;
         };
 
-        Origin m_utm0_;
+
         bool origin_is_set_{false};
     public:
         LlToUtmTransform() = default;
@@ -31,6 +31,8 @@ namespace clap_b7{
         void LLtoUTM(double Lat, double Long, int zoneNumber, double &UTMNorthing, double &UTMEasting) const;
 
         int find_zone(double Lat, double long_temp) const;
+
+        Origin m_utm0_;
     };
 
 } // namespace clap_b7

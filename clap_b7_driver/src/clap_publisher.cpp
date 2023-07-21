@@ -20,6 +20,7 @@ namespace clap_b7 {
         if(params_.get_use_odometry()){
             gnss_odom_pub_ = ref_ros_node.create_publisher<nav_msgs::msg::Odometry>(params_.get_odometry_topic(), max_msg_size_);
             tf_broadcaster_odom_ = std::make_shared<tf2_ros::TransformBroadcaster>(ref_ros_node);
+            tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(ref_ros_node);
         }
     }
 
@@ -96,6 +97,12 @@ namespace clap_b7 {
     void Publishers::broadcast_transforms(const geometry_msgs::msg::TransformStamped& gnss_odom_tf_){
         if(tf_broadcaster_odom_){
             tf_broadcaster_odom_->sendTransform(gnss_odom_tf_);
+        }
+    }
+
+    void Publishers::broadcast_static_transform(const geometry_msgs::msg::TransformStamped& gnss_odom_tf_){
+        if(tf_static_broadcaster_){
+            tf_static_broadcaster_->sendTransform(gnss_odom_tf_);
         }
     }
 
