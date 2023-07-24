@@ -1,35 +1,34 @@
 /**:
   ros__parameters:
     serial_config:
-      port: "/dev/ttyUSB0"
-      baudrate: 460800
+      port: "/dev/ttyUSB0" # current port name of the device
+      baudrate: 460800 # current baudrate of the device
 
     topic_config:
-      pub_custom_msgs: true
-      pub_standard_msgs: true
-      sub_rtcm_msgs: true
-      rtcm_topic_name: "/sensing/gnss/ntrip/rtcm"
-      imu_topic: "clap/ros/imu"
-      nav_sat_fix_topic: "clap/ros/gps_nav_sat_fix"
-      twist_topic: "clap/ros/twist_with_covariance_stamped"
-      temperature_topic: "clap/ros/temperature"
-      autoware_orientation_topic: "clap/autoware_orientation"
+      pub_custom_msgs: true # publish custom messages if true
+      pub_standard_msgs: true # publish standard messages if true
+      sub_rtcm_msgs: true # subscribe to RTCM messages if true
+      rtcm_topic_name: "/sensing/gnss/ntrip/rtcm" # RTCM topic name
+      imu_topic: "clap/ros/imu" # IMU topic name
+      nav_sat_fix_topic: "clap/ros/gps_nav_sat_fix" # NavSatFix topic name
+      twist_topic: "clap/ros/twist_with_covariance_stamped" # TwistWithCovarianceStamped topic name
+      temperature_topic: "clap/ros/temperature" # Temperature topic name
 
     frame_config:
-      gnss_frame: "GNSS_INS/gnss_ins_link"
+      gnss_frame: "GNSS_INS/gnss_ins_link" # GNSS frame name
 
     true_heading_config:
-      true_heading_offset: 90.0
+      true_heading_offset: 90.0 # true heading offset in degrees
 
     time_config:
-      use_ros_time: false
+      use_ros_time: false # use ROS time if true (not recommended)
 
     odometry_config:
-      use_odometry: false
-      odometry_topic: "clap/ros/odometry"
-      odometry_frame: "odom"
+      use_odometry: false # use odometry if true
+      odometry_topic: "clap/ros/odometry" # Odometry topic name
+      odometry_frame: "odom" # Odometry frame name
 
     origin_config:
-      latitude: 0.0
-      longitude: 0.0
-      altitude: 0.0
+      latitude: 0.0 # latitude of the origin
+      longitude: 0.0 # longitude of the origin
+      altitude: 0.0 # altitude of the origin

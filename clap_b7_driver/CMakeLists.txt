@@ -18,7 +18,6 @@ find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(mavros_msgs REQUIRED)
-find_package(autoware_sensing_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 include_directories(include)
@@ -73,7 +72,6 @@ ament_target_dependencies(clap_b7_driver_node
         tf2_geometry_msgs
         mavros_msgs
         nav_msgs
-        autoware_sensing_msgs
         Eigen3
         )
 

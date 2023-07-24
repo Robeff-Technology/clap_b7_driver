@@ -92,9 +92,6 @@ namespace clap_b7{
                 heading_.heading = static_cast<float>(ClapMsgWrapper::add_heading_offset(heading_.heading, params_.get_true_heading_offset()));
                 auto msg = msg_wrapper_.create_gps_heading_msg(heading_, params_.get_gnss_frame());
                 publishers_.publish_heading(msg);
-
-                auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_,params_.get_gnss_frame());
-                publishers_.publish_autoware_orientation(autoware_msg);
                 break;
             }
 
@@ -116,8 +113,6 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kBestGnssVel: {
                 memcpy(&gnss_vel_, data, sizeof(BestGnssVel));
-                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
-                publishers_.publish_twist(msg);
 
                 auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, params_.get_gnss_frame());
                 publishers_.publish_gps_vel(custom_msg);
