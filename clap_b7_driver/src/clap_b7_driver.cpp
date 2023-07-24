@@ -2,6 +2,8 @@
 // Created by elaydin on 07.07.2023.
 //
 
+#include <math.h>
+
 #include <clap_b7_driver/clap_b7_driver.hpp>
 
 
@@ -29,7 +31,18 @@ namespace clap_b7{
             RCLCPP_INFO(this->get_logger(), "RTCM subscriber is created %s", params_.get_rtcm_topic().c_str());
         }
 
+        if(params_.get_use_odometry()){
+            ll_to_utm_transform_.set_origin(params_.get_lat_origin(), params_.get_long_origin(), params_.get_alt_origin());
 
+
+            geometry_msgs::msg::Pose pos_msg;
+            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.easting;
+            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.northing;
+            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.altitude;
+
+            auto msg = msg_wrapper_.create_transform(pos_msg, params_.get_odometry_frame(), "base_link");
+            publishers_.broadcast_static_transform(msg);
+        }
 
         try_serial_connection(params_.get_serial_port(), params_.get_baudrate());
         serial_.setCallback(std::bind(&ClapB7Driver::serial_read_callback, this, std::placeholders::_1, std::placeholders::_2));
@@ -76,8 +89,12 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kHeading: {
                 memcpy(&heading_, data, sizeof(UniHeading));
+                heading_.heading = static_cast<float>(ClapMsgWrapper::add_heading_offset(heading_.heading, params_.get_true_heading_offset()));
                 auto msg = msg_wrapper_.create_gps_heading_msg(heading_, params_.get_gnss_frame());
                 publishers_.publish_heading(msg);
+
+                auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_,params_.get_gnss_frame());
+                publishers_.publish_autoware_orientation(autoware_msg);
                 break;
             }
 
@@ -99,7 +116,7 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kBestGnssVel: {
                 memcpy(&gnss_vel_, data, sizeof(BestGnssVel));
-                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_.z_gyro_output, params_.get_gnss_frame());
+                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_twist(msg);
 
                 auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, params_.get_gnss_frame());
@@ -112,9 +129,37 @@ namespace clap_b7{
                 if(clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
                     auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
                     publishers_.publish_imu(msg);
+                    /*
+                     * ODOM
+                     */
+                    if(params_.get_use_odometry()){
+                        double x = NAN;
+                        double y = NAN;
+                        double z = NAN;
+                        try{
+                            ll_to_utm_transform_.transform(ins_pvax_.latitude, ins_pvax_.longitude, ins_pvax_.height, x, y, z);
+                        }
+                        catch(std::runtime_error &exc){
+                            RCLCPP_ERROR(this->get_logger(), "Could not transform from ll to utm(%s)", exc.what());
+                        }
+                        auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, x, y, z, params_.get_odometry_frame(), "base_link");
+                        publishers_.publish_gnss_odom(odom_msg);
+
+                        auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
+                        publishers_.broadcast_transforms(pos_msg);
+                    }
                 }
                 auto custom_msg = msg_wrapper_.create_ins_msg(ins_pvax_, params_.get_gnss_frame());
                 publishers_.publish_ins(custom_msg);
+                break;
+            }
+
+            case clap_b7::BinaryParser::MessageId::kECEF: {
+                memcpy(&ecef_, data, sizeof(ECEF));
+                auto msg = msg_wrapper_.create_ecef_msg(ecef_);
+                publishers_.publish_ecef(msg);
+                auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_, params_.get_gnss_frame());
+                publishers_.publish_twist_ecef(twist_msg);
                 break;
             }
         }

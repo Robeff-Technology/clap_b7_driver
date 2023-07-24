@@ -119,5 +119,29 @@ namespace clap_b7 {
         uint8_t signal_mask_gal_bds3{};
         uint8_t signal_mask_gps_glo_bds2{};
     }__attribute__((packed));
+
+    struct ECEF{
+        uint32_t sol_status;
+        uint32_t pos_type;
+
+        double pos_x;
+        double pos_y;
+        double pos_z;
+
+        float std_pos_x;
+        float std_pos_y;
+        float std_pos_z;
+
+        uint32_t v_sol_status;
+        uint32_t vel_type;
+
+        double vel_x;
+        double vel_y;
+        double vel_z;
+
+        float std_vel_x;
+        float std_vel_y;
+        float std_vel_z;
+    }__attribute__((packed));
 }
 #endif //CLAP_STRUCTS_H

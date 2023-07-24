@@ -26,6 +26,7 @@ namespace clap_b7 {
             kBestGnssPos = 1429,
             kBestGnssVel = 1430,
             kINSPVAX = 1465,
+            kECEF = 241,
         };
         int64_t gnss_unix_time_ns_{0};
         void received_new_data(const uint8_t* buffer, uint16_t size);

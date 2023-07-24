@@ -11,22 +11,33 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(mavros_msgs REQUIRED)
+find_package(autoware_sensing_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 include_directories(include)
 
+set(GeographicLib_INCLUDE_DIRS ${GeographicLib_INCLUDE_DIR})
 set(msg_files
         "msg/ClapHeading.msg"
         "msg/ClapGpsPos.msg"
         "msg/ClapGpsVel.msg"
         "msg/ClapImu.msg"
         "msg/ClapIns.msg"
+        "msg/ClapECEF.msg"
         )
+
+
+find_path(GeographicLib_INCLUDE_DIR GeographicLib/Config.h
+        PATH_SUFFIXES GeographicLib
+        )
+
 
 rosidl_generate_interfaces(${PROJECT_NAME}
           ${msg_files}
@@ -44,11 +55,13 @@ set(TARGET_SRC
         src/clap_msg_wrapper.cpp
         src/clap_config.cpp
         src/clap_publisher.cpp
+        src/ll_to_utm_transform.cpp
         )
 
 add_executable(clap_b7_driver_node
         ${TARGET_SRC}
         )
+
 
 ament_target_dependencies(clap_b7_driver_node
         rclcpp
@@ -59,6 +72,9 @@ ament_target_dependencies(clap_b7_driver_node
         tf2_msgs
         tf2_geometry_msgs
         mavros_msgs
+        nav_msgs
+        autoware_sensing_msgs
+        Eigen3
         )
 
 install(TARGETS

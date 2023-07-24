@@ -12,14 +12,22 @@
 #include <sensor_msgs/msg/temperature.hpp>
 
 #include <clap_b7_driver/clap_structs.h>
+
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <clap_b7_driver/msg/clap_heading.hpp>
 #include <clap_b7_driver/msg/clap_imu.hpp>
 #include <clap_b7_driver/msg/clap_gps_pos.hpp>
 #include <clap_b7_driver/msg/clap_gps_vel.hpp>
 #include <clap_b7_driver/msg/clap_ins.hpp>
+#include <clap_b7_driver/msg/clap_ecef.hpp>
 
+#include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
+#include <Eigen/Dense>
 
 
 namespace clap_b7{
@@ -39,10 +47,10 @@ namespace clap_b7{
         static bool is_ins_active(const clap_b7::InsPvax& ins);
         static double calc_imu_temperature(const clap_b7::RawImu& raw_imu);
         sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const InsPvax& ins, std::string frame_id) const;
-        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const BestGnssPos& ins, std::string frame_id) const;
+        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const BestGnssPos& gps_pos, std::string frame_id) const;
 
         geometry_msgs::msg::TwistWithCovarianceStamped
-        create_twist_msg(const BestGnssVel& gnss_vel, float heading, int32_t z_gyro_raw, std::string frame_id) const;
+        create_twist_msg(const BestGnssVel& gnss_vel, float heading, const RawImu& imu, std::string frame_id) const;
 
         std_msgs::msg::Header create_header(std::string frame_id) const;
 
@@ -57,6 +65,25 @@ namespace clap_b7{
         clap_b7_driver::msg::ClapIns create_ins_msg(const InsPvax &ins, std::string frame_id) const;
 
         sensor_msgs::msg::Temperature create_temperature_msg(const RawImu &raw_imu, std::string frame_id) const;
+
+        autoware_sensing_msgs::msg::GnssInsOrientationStamped create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const;
+
+        static double add_heading_offset(double heading, double offset);
+
+        geometry_msgs::msg::TransformStamped
+        create_transform(const geometry_msgs::msg::Pose &ref_pose, std::string frame_id, std::string child_frame_id) const;
+
+        static Eigen::Matrix<double, 3, 3> convert_stddev_llh_to_enu(const Eigen::Matrix<double, 3, 3> &covarianceLLH,
+                                                              const Eigen::Matrix<double, 3, 3> &rotationMatrix);
+
+        nav_msgs::msg::Odometry
+        create_odom_msg(const InsPvax &ins, const RawImu &imu, double x, double y, double z,
+                        std::string frame_id, std::string child_frame_id) const;
+
+        geometry_msgs::msg::TwistWithCovarianceStamped
+        create_twist_msg(const ECEF &ecef, const RawImu& imu, std::string frame_id) const;
+
+        clap_b7_driver::msg::ClapECEF create_ecef_msg(const ECEF &ecef) const;
     };
 
 } // namespace clap_b7

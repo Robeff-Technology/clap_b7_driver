@@ -13,9 +13,23 @@
       nav_sat_fix_topic: "clap/ros/gps_nav_sat_fix"
       twist_topic: "clap/ros/twist_with_covariance_stamped"
       temperature_topic: "clap/ros/temperature"
+      autoware_orientation_topic: "clap/autoware_orientation"
 
     frame_config:
       gnss_frame: "GNSS_INS/gnss_ins_link"
 
+    true_heading_config:
+      true_heading_offset: 90.0
+
     time_config:
       use_ros_time: false
+
+    odometry_config:
+      use_odometry: false
+      odometry_topic: "clap/ros/odometry"
+      odometry_frame: "odom"
+
+    origin_config:
+      latitude: 0.0
+      longitude: 0.0
+      altitude: 0.0

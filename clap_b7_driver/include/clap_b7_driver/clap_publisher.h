@@ -11,6 +11,7 @@
 #include <clap_b7_driver/msg/clap_heading.hpp>
 #include <clap_b7_driver/msg/clap_imu.hpp>
 #include <clap_b7_driver/msg/clap_ins.hpp>
+#include <clap_b7_driver/msg/clap_ecef.hpp>
 
 #include <clap_b7_driver/clap_config.h>
 
@@ -18,6 +19,11 @@
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <sensor_msgs/msg/temperature.hpp>
+#include <nav_msgs/msg/odometry.hpp>
+
+#include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 
 #include <cstdint>
 
@@ -32,7 +38,12 @@ namespace clap_b7{
         rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
         rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_pub_;
         rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped >::SharedPtr twist_pub_;
+        rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped >::SharedPtr twist_pub_ecef;
         rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr temperature_pub_;
+        rclcpp::Publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>::SharedPtr gnss_ins_orientation_pub_;
+        rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr gnss_odom_pub_;
+        std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_odom_;
+        std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
 
         /*
          * Clap msgs Publishers
@@ -42,6 +53,7 @@ namespace clap_b7{
         rclcpp::Publisher<clap_b7_driver::msg::ClapHeading>::SharedPtr heading_pub_;
         rclcpp::Publisher<clap_b7_driver::msg::ClapImu>::SharedPtr adis16470_imu_pub_;
         rclcpp::Publisher<clap_b7_driver::msg::ClapIns>::SharedPtr ins_pub_;
+        rclcpp::Publisher<clap_b7_driver::msg::ClapECEF>::SharedPtr pub_ecef;
     public:
 
         void init_std_msgs_publisher(rclcpp::Node &ref_ros_node,clap_b7::ConfigParams params_);
@@ -58,6 +70,20 @@ namespace clap_b7{
         void publish_ins(const clap_b7_driver::msg::ClapIns& ins_msg);
 
         void publish_temperature(const sensor_msgs::msg::Temperature &temperature_msg);
+
+        void
+        publish_autoware_orientation(
+                const autoware_sensing_msgs::msg::GnssInsOrientationStamped &autoware_orientation_msg);
+
+        void publish_gnss_odom(const nav_msgs::msg::Odometry &gnss_odom_msg);
+
+        void broadcast_transforms(const geometry_msgs::msg::TransformStamped &gnss_odom_tf_);
+
+        void publish_ecef(const clap_b7_driver::msg::ClapECEF &ecef_msg);
+
+        void publish_twist_ecef(const geometry_msgs::msg::TwistWithCovarianceStamped &twist_msg);
+
+        void broadcast_static_transform(const geometry_msgs::msg::TransformStamped &gnss_odom_tf_);
     };
 
 } // namespace clap_b7
