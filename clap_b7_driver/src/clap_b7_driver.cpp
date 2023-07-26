@@ -2,9 +2,10 @@
 // Created by elaydin on 07.07.2023.
 //
 
-#include <math.h>
+#include <cmath>
 
 #include <clap_b7_driver/clap_b7_driver.hpp>
+#include <clap_b7_driver/clap_config_params.h>
 
 
 
@@ -25,7 +26,7 @@ namespace clap_b7{
         }
 
         if(params_.get_sub_ntrip_msgs()){
-            rtcm_sub_= this->create_subscription<mavros_msgs::msg::RTCM>(params_.get_rtcm_topic(), 10,
+            rtcm_sub_ = this->create_subscription<mavros_msgs::msg::RTCM>(params_.get_rtcm_topic(), 10,
                                                               std::bind(&ClapB7Driver::rtcm_callback, this,
                                                                         std::placeholders::_1));
             RCLCPP_INFO(this->get_logger(), "RTCM subscriber is created %s", params_.get_rtcm_topic().c_str());
@@ -57,7 +58,7 @@ namespace clap_b7{
         params_.load_parameters(n_private);
     }
 
-    void ClapB7Driver::try_serial_connection(std::basic_string<char> port, unsigned int baud) {
+    void ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
         // try to connect serial
         do {
             RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");

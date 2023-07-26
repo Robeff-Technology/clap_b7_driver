@@ -22,7 +22,6 @@ find_package(Eigen3 REQUIRED)
 
 include_directories(include)
 
-set(GeographicLib_INCLUDE_DIRS ${GeographicLib_INCLUDE_DIR})
 set(msg_files
         "msg/ClapHeading.msg"
         "msg/ClapGpsPos.msg"
@@ -33,9 +32,6 @@ set(msg_files
         )
 
 
-find_path(GeographicLib_INCLUDE_DIR GeographicLib/Config.h
-        PATH_SUFFIXES GeographicLib
-        )
 
 
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -43,6 +39,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
           DEPENDENCIES
             std_msgs
         )
+
 ament_export_dependencies(rosidl_default_runtime)
 
 

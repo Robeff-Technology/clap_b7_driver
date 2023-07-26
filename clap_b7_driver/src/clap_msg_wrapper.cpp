@@ -58,32 +58,6 @@ namespace clap_b7{
         return header;
     }
 
-    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const clap_b7::BestGnssVel& gnss_vel, float heading, const clap_b7::RawImu& imu, std::string frame_id) const{
-        geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
-        twist_msg.header = create_header(std::move(frame_id));
-        if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
-            twist_msg.twist.twist.linear.x = gnss_vel.horizontal_speed;
-        }
-        else{
-            twist_msg.twist.twist.linear.x = -gnss_vel.horizontal_speed;
-        }
-
-        twist_msg.twist.twist.linear.y = 0.0;
-        twist_msg.twist.twist.linear.z = 0.0;
-
-        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
-        twist_msg.twist.twist.angular.y = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
-        twist_msg.twist.twist.angular.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
-
-        twist_msg.twist.covariance[0] = 0.04;
-        twist_msg.twist.covariance[7]  = 10000.0;
-        twist_msg.twist.covariance[14] = 10000.0;
-        twist_msg.twist.covariance[21] = 10000.0;
-        twist_msg.twist.covariance[28] = 10000.0;
-        twist_msg.twist.covariance[35] = 0.02;
-        return twist_msg;
-    }
-
     sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::InsPvax& ins, std::string frame_id) const {
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
 
@@ -133,13 +107,13 @@ namespace clap_b7{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
 
-        if(gps_pos.pos_type == 56 || gps_pos.pos_type == 55) {
+        if(gps_pos.pos_type >= 32) {
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
         }
-        else if(gps_pos.pos_type == 54){
+        else if(gps_pos.pos_type == 18){
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
         }
-        else if(gps_pos.pos_type < 54 && gps_pos.pos_type >= 52){
+        else if(gps_pos.pos_type == 16){
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
         }
         else {
@@ -203,8 +177,8 @@ namespace clap_b7{
          * angular velocity and linear acceleration covariance is not provided by clap b7
          */
         for(size_t i = 0; i < 9; i += 4){
-            imu_msg.angular_velocity_covariance[i] = 0.01;
-            imu_msg.linear_acceleration_covariance[i] = 0.01;
+            imu_msg.angular_velocity_covariance[i] = 0.00;
+            imu_msg.linear_acceleration_covariance[i] = 0.00;
         }
 
         return imu_msg;
@@ -331,7 +305,7 @@ namespace clap_b7{
 
         odom_msg.header = create_header(std::move(frame_id));
 
-        odom_msg.child_frame_id = child_frame_id;
+        odom_msg.child_frame_id = std::move(child_frame_id);
 
         tf2::Quaternion q;
 
@@ -419,9 +393,9 @@ namespace clap_b7{
         twist_msg.twist.twist.angular.y = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
         twist_msg.twist.twist.angular.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
 
-        twist_msg.twist.covariance[0] = ecef.std_vel_x;
-        twist_msg.twist.covariance[7]  = ecef.std_vel_y;
-        twist_msg.twist.covariance[14] = ecef.std_vel_z;
+        twist_msg.twist.covariance[0] = ecef.std_vel_x * ecef.std_vel_x;
+        twist_msg.twist.covariance[7]  = ecef.std_vel_y * ecef.std_vel_y;
+        twist_msg.twist.covariance[14] = ecef.std_vel_z * ecef.std_vel_z;
         twist_msg.twist.covariance[21] = 0.0;
         twist_msg.twist.covariance[28] = 0.0;
         twist_msg.twist.covariance[35] = 0.0;

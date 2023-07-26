@@ -2,7 +2,7 @@
 // Created by elaydin on 09.07.2023.
 //
 
-#include <clap_b7_driver/clap_config.h>
+#include <clap_b7_driver/clap_config_params.h>
 
 
 namespace clap_b7{

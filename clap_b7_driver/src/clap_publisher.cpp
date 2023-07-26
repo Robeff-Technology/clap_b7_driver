@@ -3,6 +3,7 @@
 #include <clap_b7_driver/clap_publisher.h>
 
 
+
 namespace clap_b7 {
 
     void Publishers::init_std_msgs_publisher(rclcpp::Node &ref_ros_node,
@@ -29,14 +30,13 @@ namespace clap_b7 {
         gps_vel_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapGpsVel>("clap/clap_gnss_vel", max_msg_size_);
         adis16470_imu_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapImu>("clap/clap_adis16470", max_msg_size_);
         ins_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapIns>("clap/clap_ins", max_msg_size_);
-        pub_ecef_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapECEF>("ecef_pos", max_msg_size_);
+        pub_ecef_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapECEF>("clap/ecef_pos", max_msg_size_);
     }
 
     void Publishers::publish_ins(const clap_b7_driver::msg::ClapIns &ins_msg) {
         if(ins_pub_){
             ins_pub_->publish(ins_msg);
         }
-
     }
 
     void Publishers::publish_temperature(const sensor_msgs::msg::Temperature& temperature_msg){

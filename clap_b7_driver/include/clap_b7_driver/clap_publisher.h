@@ -13,7 +13,7 @@
 #include <clap_b7_driver/msg/clap_ins.hpp>
 #include <clap_b7_driver/msg/clap_ecef.hpp>
 
-#include <clap_b7_driver/clap_config.h>
+#include <clap_b7_driver/clap_config_params.h>
 
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>

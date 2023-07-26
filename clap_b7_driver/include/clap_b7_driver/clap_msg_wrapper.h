@@ -48,9 +48,6 @@ namespace clap_b7{
         sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const InsPvax& ins, std::string frame_id) const;
         sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const BestGnssPos& gps_pos, std::string frame_id) const;
 
-        geometry_msgs::msg::TwistWithCovarianceStamped
-        create_twist_msg(const BestGnssVel& gnss_vel, float heading, const RawImu& imu, std::string frame_id) const;
-
         std_msgs::msg::Header create_header(std::string frame_id) const;
 
         clap_b7_driver::msg::ClapGpsPos create_gps_pos_msg(const BestGnssPos &gnss_pos, std::string frame_id) const;

@@ -24,7 +24,7 @@ To install the  Clap-B7 ROS2 driver, follow these steps:
 
 Before proceeding with the installation, ensure you have the following prerequisites:
 
-1.  ROS2 Humble Hippo: Make sure you have a working ROS2 Humble installation. If you don't have ROS2 Humble installed, you can follow the official installation instructions: [ROS2 Installation Guide](https://docs.ros.org/en/humble/Installation.html).
+1.  ROS2 Humble: Make sure you have a working ROS2 Humble installation. If you don't have ROS2 Humble installed, you can follow the official installation instructions: [ROS2 Installation Guide](https://docs.ros.org/en/humble/Installation.html).
 
 2.  Build Tools: Ensure you have the necessary build tools and dependencies installed on your system.
 
@@ -41,8 +41,8 @@ Before proceeding with the installation, ensure you have the following prerequis
     colcon build --packages select clap_b7_driver
     ```  
 -   Source the Workspace: Source your ROS2 workspace to make the newly built Clap-B7 driver node available:
-       ```
-	 source /path/to/your/ros2_workspace/install/setup.bash 
+    ```
+    source /path/to/your/ros2_workspace/install/setup.bash 
     ```
 
 
