@@ -52,16 +52,24 @@ set(TARGET_SRC
         src/clap_b7_driver.cpp
         src/AsyncSerial.cpp
         src/clap_msg_wrapper.cpp
-        src/clap_config.cpp
+        src/clap_config_params.cpp
         src/clap_publisher.cpp
         src/ll_to_utm_transform.cpp
+        )
+
+set(TARGET_SRC_CONFIG
+        src/config_clap_b7_node.cpp
+        src/AsyncSerial.cpp
+        src/config_clap_b7.cpp
         )
 
 add_executable(clap_b7_driver_node
         ${TARGET_SRC}
         )
 
-
+add_executable(config_clap_b7_node
+        ${TARGET_SRC_CONFIG}
+        )
 ament_target_dependencies(clap_b7_driver_node
         rclcpp
         std_msgs
@@ -75,9 +83,18 @@ ament_target_dependencies(clap_b7_driver_node
         Eigen3
         )
 
+ament_target_dependencies(config_clap_b7_node
+        rclcpp
+        )
+
 install(TARGETS
         clap_b7_driver_node
         DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+        config_clap_b7_node
+        DESTINATION lib/${PROJECT_NAME})
+
 
 install(DIRECTORY
         launch
@@ -88,6 +105,8 @@ install(DIRECTORY
         config
         DESTINATION share/${PROJECT_NAME}
         )
+
+
 
 rosidl_target_interfaces(clap_b7_driver_node
         ${PROJECT_NAME} "rosidl_typesupport_cpp")

@@ -1,0 +1,54 @@
+/**:
+  ros__parameters:
+    serial_config:
+      port: "/dev/ttyUSB0" # current port name of the device
+      baudrate: 460800 # current baudrate of the device 460800 recommended
+
+    port1_config:
+      baudrate: 460800 #port 1 baudrate
+      rawimu_period: 0.02  #rawimu msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
+      inspvax_period: 0.02  #inspvax msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
+      uniheading_period: 0.2 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      bestgnsspos_period: 0.2 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      bestgnssvel_period: 0.2 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      ecef_period: 0.2 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      gprmc: false # when true send gprmc message 1 Hz
+
+    port2_config:
+      baudrate: 9600 #port 2 baudrate
+      rawimu_period: 0.0  #rawimu msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
+      inspvax_period: 0.0  #inspvax msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
+      uniheading_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      bestgnsspos_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      bestgnssvel_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      ecef_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      gprmc: false # when true send gprmc message 1 Hz
+
+    port3_config:
+      baudrate: 9600 #port 3 baudrate
+      rawimu_period: 0.0  #rawimu msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
+      inspvax_period: 0.0  #inspvax msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
+      uniheading_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      bestgnsspos_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      bestgnssvel_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      ecef_period: 0.0 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
+      gprmc: true # when true send gprmc message 1 Hz
+
+    ins_config:
+      enable: true # true (recommended) false-> disable ins
+      timeout: 300 #(sec) default 300 set the output duration of INS system when losing GNSS signals, in seconds.
+      align_velocity_threshold: 0.5 # (m/s) default 0.5 set the velocity threshold for INS alignment, in m/s.
+      lever_arm_master: [0.0 0.5 1.1350] # (m)(x,y,z)default [0.0 0.0 0.0] set the lever arm of the master antenna relative to the IMU, in meters.
+      lever_arm_slave:  [0.0 -0.52 1.1350] # (m)(x,y,z) default [0.0 0.0 0.0] set the lever arm of the slave antenna relative to the IMU, in meters.
+      lever_arm_master_error: [0.03 0.03 0.02] # (m)(x,y,z) default [0.0 0.0 0.0] set the lever arm error of the master antenna relative to the IMU, in meters.
+      lever_arm_slave_error: [0.03 0.03 0.02] # (m)(x,y,z) default [0.0 0.0 0.0] set the lever arm error of the slave antenna relative to the IMU, in meters.
+      imu_position_offset: [0.0 0.0 -0.49] #(m)(x,y,z) default [0.0 0.0 0.0]set the position offsets of IMU, when INS osition and velocity are output
+
+    pps_config:
+      enable: true # true (recommended) false-> disable pps
+      # 1->only when the time is valid, the PPS pulse can output; if losing satellite signals, the receiver stops outputtingPPS pulse
+      # 0->Enable PPS output, keeping PPS pulse output after the first fix
+      mode: 0
+      polarity: POSITIVE # POSITIVE->positive polarity NEGATIVE->negative polarity default POSITIVE
+      width: 500000 # (us) set the pulse width of the PPS pulse, in microseconds.
+      period: 1000 # (ms) set the period of the PPS pulse, in milliseconds.
