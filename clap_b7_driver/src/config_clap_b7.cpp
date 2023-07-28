@@ -184,7 +184,7 @@ namespace clap_b7{
         node.get_parameter_or<float>("port1_config.ecef_period", period, 0.2);
         load_log_commands("com1", period, "bestxyzb");
 
-       node.get_parameter_or<float>("port1_config.rawimu_period", period, 0.02);
+       node.get_parameter_or<float>("port1_config.rawimu_period", period, 0.05);
        load_log_commands("com1", period, "rawimub");
 
         node.get_parameter_or<float>("port1_config.inspvax_period", period, 0.02);
