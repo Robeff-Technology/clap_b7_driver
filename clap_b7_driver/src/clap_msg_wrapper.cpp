@@ -133,18 +133,19 @@ namespace clap_b7{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
 
-        if(gps_pos.pos_type == 56 || gps_pos.pos_type == 55) {
+        if(gps_pos.pos_type >= 32) {
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
         }
-        else if(gps_pos.pos_type == 54){
+        else if(gps_pos.pos_type == 18){
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_SBAS_FIX;
         }
-        else if(gps_pos.pos_type < 54 && gps_pos.pos_type >= 52){
+        else if(gps_pos.pos_type == 16){
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_GBAS_FIX;
         }
         else {
             nav_sat_fix_msg.status.status = sensor_msgs::msg::NavSatStatus::STATUS_NO_FIX;
         }
+
 
 
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
