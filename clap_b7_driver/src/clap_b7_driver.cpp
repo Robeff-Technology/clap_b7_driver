@@ -108,7 +108,10 @@ namespace clap_b7{
                     msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, params_.get_gnss_frame());
                 }
 
+
                 auto custom_msg = msg_wrapper_.create_gps_pos_msg(gnss_pos_, params_.get_gnss_frame());
+                auto sensor_msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, params_.get_gnss_frame());
+                publishers_.publish_raw_navsatfix(sensor_msg);
                 publishers_.publish_gps_pos(custom_msg);
                 publishers_.publish_nav_sat_fix(msg);
                 break;

@@ -37,6 +37,7 @@ namespace clap_b7{
          */
         rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_pub_;
         rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_pub_;
+        rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr nav_sat_fix_raw_pub_;
         rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped >::SharedPtr twist_pub_;
         rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped >::SharedPtr twist_pub_ecef;
         rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr temperature_pub_;
@@ -84,6 +85,8 @@ namespace clap_b7{
         void publish_twist_ecef(const geometry_msgs::msg::TwistWithCovarianceStamped &twist_msg);
 
         void broadcast_static_transform(const geometry_msgs::msg::TransformStamped &gnss_odom_tf_);
+
+        void publish_raw_navsatfix(const sensor_msgs::msg::NavSatFix &nav_sat_fix_msg);
     };
 
 } // namespace clap_b7

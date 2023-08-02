@@ -12,7 +12,8 @@ namespace clap_b7 {
          */
         temperature_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Temperature>(params_.get_temperature_topic(), max_msg_size_);
         twist_pub_ = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(params_.get_twist_topic(), max_msg_size_);
-        twist_pub_ecef = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("ecef_twist", max_msg_size_);
+        twist_pub_ecef = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("eagleye/ecef_twist", max_msg_size_);
+        nav_sat_fix_raw_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>("eagleye/nav_sat_fix", max_msg_size_);
         nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
         gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
@@ -115,6 +116,12 @@ namespace clap_b7 {
     void Publishers:: publish_twist_ecef(const geometry_msgs::msg::TwistWithCovarianceStamped& twist_msg){
         if(twist_pub_ecef) {
             twist_pub_ecef->publish(twist_msg);
+        }
+    }
+
+    void Publishers:: publish_raw_navsatfix(const sensor_msgs::msg::NavSatFix& nav_sat_fix_msg){
+        if(nav_sat_fix_raw_pub_) {
+            nav_sat_fix_raw_pub_->publish(nav_sat_fix_msg);
         }
     }
 } // namespace clap_b7
