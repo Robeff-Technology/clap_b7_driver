@@ -84,6 +84,10 @@ namespace clap_b7{
         create_twist_msg(const ECEF &ecef, const RawImu& imu, std::string frame_id) const;
 
         clap_b7_driver::msg::ClapECEF create_ecef_msg(const ECEF &ecef) const;
+
+        sensor_msgs::msg::Imu create_raw_imu_msg(const RawImu &imu, std::string frame_id) const;
+
+        static double raw_gyro_to_deg(int32_t raw_gyro);
     };
 
 } // namespace clap_b7

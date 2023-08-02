@@ -16,6 +16,7 @@ namespace clap_b7 {
         nav_sat_fix_raw_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>("eagleye/nav_sat_fix", max_msg_size_);
         nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
+        raw_imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>("map/raw_imu", max_msg_size_);
         gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
 
         if(params_.get_use_odometry()){
@@ -122,6 +123,12 @@ namespace clap_b7 {
     void Publishers:: publish_raw_navsatfix(const sensor_msgs::msg::NavSatFix& nav_sat_fix_msg){
         if(nav_sat_fix_raw_pub_) {
             nav_sat_fix_raw_pub_->publish(nav_sat_fix_msg);
+        }
+    }
+
+    void Publishers:: publish_raw_imu(const sensor_msgs::msg::Imu& imu_msg){
+        if(raw_imu_pub_) {
+            raw_imu_pub_->publish(imu_msg);
         }
     }
 } // namespace clap_b7

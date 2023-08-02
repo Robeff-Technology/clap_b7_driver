@@ -37,6 +37,11 @@ namespace clap_b7{
         return static_cast<double>(raw_gyro) * gyro_scale_factor * hz_to_second;
     }
 
+    double ClapMsgWrapper::raw_gyro_to_deg(int32_t raw_gyro) {
+        return static_cast<double>(raw_gyro) * gyro_scale_factor;
+    }
+
+
     double ClapMsgWrapper::degree2radian(double degree) {
         return degree * M_PI / 180.0;
     }
@@ -451,5 +456,51 @@ namespace clap_b7{
         twist_msg.twist.covariance[28] = 0.0;
         twist_msg.twist.covariance[35] = 0.0;
         return twist_msg;
+    }
+
+    sensor_msgs::msg::Imu ClapMsgWrapper::create_raw_imu_msg(const RawImu &imu, std::string frame_id) const{
+        sensor_msgs::msg::Imu imu_msg;
+        imu_msg.header = create_header(std::move(frame_id));
+        tf2::Quaternion q;
+        static double roll = 0.0;
+        static double pitch = 0.0;
+        static double yaw = 0.0;
+
+        roll += degree2radian(raw_gyro_to_deg(imu.x_gyro_output)) ;
+        pitch += degree2radian(raw_gyro_to_deg(imu.y_gyro_output));
+        yaw += degree2radian(raw_gyro_to_deg(imu.z_gyro_output));
+
+        q.setRPY(roll, pitch, yaw);
+
+        /*
+         * in clap b7     roll->y-axis     pitch-> x axis     azimuth->left-handed rotation around z-axis
+         * in ros imu msg roll-> x-axis    pitch-> y axis     azimuth->right-handed rotation around z-axis
+         */
+        //q.setRPY(degree2radian(ins.pitch), degree2radian(ins.roll), degree2radian(-ins.azimuth));
+        imu_msg.orientation.w = q.getW();
+        imu_msg.orientation.x = q.getX();
+        imu_msg.orientation.y = q.getY();
+        imu_msg.orientation.z = q.getZ();
+
+        imu_msg.angular_velocity.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
+        imu_msg.angular_velocity.y = -1.0 * degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
+        imu_msg.angular_velocity.z = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
+
+        imu_msg.linear_acceleration.x = raw_acc_to_m_s2(imu.x_accel_output);
+        imu_msg.linear_acceleration.y = -1.0 * raw_acc_to_m_s2(imu.y_accel_output);
+        imu_msg.linear_acceleration.z = raw_acc_to_m_s2(imu.z_accel_output);
+
+        imu_msg.orientation_covariance[0] = 0.001;
+        imu_msg.orientation_covariance[4] = 0.001;
+        imu_msg.orientation_covariance[8] = 0.001;
+
+        /*
+         * angular velocity and linear acceleration covariance is not provided by clap b7
+         */
+        for(size_t i = 0; i < 9; i += 4){
+            imu_msg.angular_velocity_covariance[i] = 0.001;
+            imu_msg.linear_acceleration_covariance[i] = 0.001;
+        }
+        return imu_msg;
     }
 } // namespace clap_b7

@@ -84,6 +84,9 @@ namespace clap_b7{
 
                 auto temp_msg = msg_wrapper_.create_temperature_msg(raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_temperature(temp_msg);
+
+                auto imu_msg = msg_wrapper_.create_raw_imu_msg(raw_imu_, params_.get_gnss_frame());
+                publishers_.publish_raw_imu(imu_msg);
                 break;
             }
 
