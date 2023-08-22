@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdexcept>
 #include <rclcpp/rclcpp.hpp>
+#include <GeographicLib/UTMUPS.hpp>
 
 namespace  clap_b7{
     void LlToUtmTransform::set_origin(double lat, double lon, double altitude) {
@@ -35,7 +36,7 @@ namespace  clap_b7{
         return zone_number;
     }
 
-    void LlToUtmTransform::transform(double lat, double lon, double altitude, double &x, double &y, double &z) const {
+    void LlToUtmTransform::transform_local(double lat, double lon, double altitude, double &x, double &y, double &z) const {
         if(!origin_is_set_){
             throw std::runtime_error("Origin is not set");
         }
@@ -47,6 +48,18 @@ namespace  clap_b7{
         y = northing - m_utm0_.northing;
         z = altitude - m_utm0_.altitude;
 
+    }
+
+    void LlToUtmTransform::transform_global(double lat, double lon, double altitude, double &x, double &y, double &z) const {
+        int zone;
+        bool northp;
+        try{
+            GeographicLib::UTMUPS::Forward(lat, lon, zone, northp, x, y);
+            z = altitude;
+        }
+        catch (const GeographicLib::GeographicErr & err) {
+            throw std::runtime_error("Failed to convert from LLH to UTM = "  + std::string(err.what()));
+        }
     }
 
     void LlToUtmTransform::initUTM(double Lat, double Long, double altitude)

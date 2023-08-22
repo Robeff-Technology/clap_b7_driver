@@ -21,9 +21,17 @@ find_package(mavros_msgs REQUIRED)
 find_package(autoware_sensing_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-include_directories(include)
+find_path(GeographicLib_INCLUDE_DIR GeographicLib/Config.h
+        PATH_SUFFIXES GeographicLib
+)
 
 set(GeographicLib_INCLUDE_DIRS ${GeographicLib_INCLUDE_DIR})
+find_library(GeographicLib_LIBRARIES
+        NAMES Geographic
+)
+
+include_directories(include)
+
 set(msg_files
         "msg/ClapHeading.msg"
         "msg/ClapGpsPos.msg"
@@ -38,12 +46,12 @@ find_path(GeographicLib_INCLUDE_DIR GeographicLib/Config.h
         PATH_SUFFIXES GeographicLib
         )
 
-
 rosidl_generate_interfaces(${PROJECT_NAME}
           ${msg_files}
           DEPENDENCIES
             std_msgs
         )
+
 ament_export_dependencies(rosidl_default_runtime)
 
 
@@ -62,6 +70,9 @@ add_executable(clap_b7_driver_node
         ${TARGET_SRC}
         )
 
+target_link_libraries(clap_b7_driver_node
+        Geographic
+)
 
 ament_target_dependencies(clap_b7_driver_node
         rclcpp

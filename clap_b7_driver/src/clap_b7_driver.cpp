@@ -32,16 +32,19 @@ namespace clap_b7{
         }
 
         if(params_.get_use_odometry()){
-            ll_to_utm_transform_.set_origin(params_.get_lat_origin(), params_.get_long_origin(), params_.get_alt_origin());
+            if(params_.get_use_local_origin())
+            {
+                ll_to_utm_transform_.set_origin(params_.get_lat_origin(), params_.get_long_origin(), params_.get_alt_origin());
 
 
-            geometry_msgs::msg::Pose pos_msg;
-            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.easting;
-            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.northing;
-            pos_msg.position.x = ll_to_utm_transform_.m_utm0_.altitude;
+                geometry_msgs::msg::Pose pos_msg;
+                pos_msg.position.x = ll_to_utm_transform_.m_utm0_.easting;
+                pos_msg.position.x = ll_to_utm_transform_.m_utm0_.northing;
+                pos_msg.position.x = ll_to_utm_transform_.m_utm0_.altitude;
 
-            auto msg = msg_wrapper_.create_transform(pos_msg, params_.get_odometry_frame(), "base_link");
-            publishers_.broadcast_static_transform(msg);
+                auto msg = msg_wrapper_.create_transform(pos_msg, params_.get_odometry_frame(), "base_link");
+                publishers_.broadcast_static_transform(msg);
+            }
         }
 
         try_serial_connection(params_.get_serial_port(), params_.get_baudrate());
@@ -103,20 +106,10 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kBestGnssPos: {
                 memcpy(&gnss_pos_, data, sizeof(BestGnssPos));
-                sensor_msgs::msg::NavSatFix msg;
-                if(clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
-                    msg = msg_wrapper_.create_nav_sat_fix_msg(ins_pvax_, params_.get_gnss_frame());
-                }
-                else{
-                    msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, params_.get_gnss_frame());
-                }
-
-
                 auto custom_msg = msg_wrapper_.create_gps_pos_msg(gnss_pos_, params_.get_gnss_frame());
                 auto sensor_msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, params_.get_gnss_frame());
                 publishers_.publish_raw_navsatfix(sensor_msg);
                 publishers_.publish_gps_pos(custom_msg);
-                publishers_.publish_nav_sat_fix(msg);
                 break;
             }
 
@@ -135,6 +128,8 @@ namespace clap_b7{
                 if(clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
                     auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
                     publishers_.publish_imu(msg);
+                    auto std_msg = msg_wrapper_.create_nav_sat_fix_msg(ins_pvax_, params_.get_gnss_frame());
+                    publishers_.publish_nav_sat_fix(std_msg);
                     /*
                      * ODOM
                      */
@@ -143,7 +138,13 @@ namespace clap_b7{
                         double y = NAN;
                         double z = NAN;
                         try{
-                            ll_to_utm_transform_.transform(ins_pvax_.latitude, ins_pvax_.longitude, ins_pvax_.height, x, y, z);
+                            if(params_.get_use_local_origin()){
+                                ll_to_utm_transform_.transform_local(ins_pvax_.latitude, ins_pvax_.longitude, ins_pvax_.height, x, y, z);
+                            }
+                            else{
+                                ll_to_utm_transform_.transform_global(ins_pvax_.latitude, ins_pvax_.longitude, ins_pvax_.height, x, y, z);
+                            }
+
                         }
                         catch(std::runtime_error &exc){
                             RCLCPP_ERROR(this->get_logger(), "Could not transform from ll to utm(%s)", exc.what());

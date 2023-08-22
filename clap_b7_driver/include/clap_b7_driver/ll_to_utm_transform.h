@@ -17,12 +17,16 @@ namespace clap_b7{
         };
 
 
+
+
         bool origin_is_set_{false};
     public:
         LlToUtmTransform() = default;
         ~LlToUtmTransform() = default;
         void set_origin(double lat, double lon, double altitude);
-        void transform(double lat, double lon, double altitude, double& x, double& y, double& z) const;
+        void transform_local(double lat, double lon, double altitude, double& x, double& y, double& z) const;
+
+        void transform_global(double lat, double lon, double altitude, double& x, double& y, double& z) const;
 
         void initUTM(double Lat, double Long, double altitude);
 

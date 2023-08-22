@@ -31,6 +31,7 @@ namespace clap_b7{
         node.get_parameter_or<double>("origin_config.latitude",lat_origin_,0.0);
         node.get_parameter_or<double>("origin_config.longitude",long_origin_,0.0);
         node.get_parameter_or<double>("origin_config.altitude",alt_origin_,0.0);
+        node.get_parameter_or<bool>("origin_config.use_local_origin",use_local_origin_, false);
 
         RCLCPP_INFO(node.get_logger(), "Configurations are loaded.");
         RCLCPP_INFO(node.get_logger(), "----------------------------------------------------------------");
@@ -51,6 +52,7 @@ namespace clap_b7{
         RCLCPP_INFO(node.get_logger(), "use_odometry: %d", use_odometry_);
         RCLCPP_INFO(node.get_logger(), "odometry_topic: %s", odometry_topic_.c_str());
         RCLCPP_INFO(node.get_logger(), "odometry_frame: %s", odometry_frame_.c_str());
+        RCLCPP_INFO(node.get_logger(), "use_local_origin: %d", use_local_origin_);
         RCLCPP_INFO(node.get_logger(), "lat_origin: %f", lat_origin_);
         RCLCPP_INFO(node.get_logger(), "long_origin: %f", long_origin_);
         RCLCPP_INFO(node.get_logger(), "alt_origin: %f", alt_origin_);
@@ -135,6 +137,10 @@ namespace clap_b7{
 
     double ConfigParams::get_alt_origin(){
         return alt_origin_;
+    }
+
+    bool ConfigParams::get_use_local_origin(){
+        return use_local_origin_;
     }
 
 

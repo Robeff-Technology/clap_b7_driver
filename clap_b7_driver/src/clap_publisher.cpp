@@ -12,11 +12,11 @@ namespace clap_b7 {
          */
         temperature_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Temperature>(params_.get_temperature_topic(), max_msg_size_);
         twist_pub_ = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(params_.get_twist_topic(), max_msg_size_);
-        twist_pub_ecef = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("eagleye/ecef_twist", max_msg_size_);
-        nav_sat_fix_raw_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>("eagleye/nav_sat_fix", max_msg_size_);
+        twist_pub_ecef = ref_ros_node.create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("raw/ecef_twist", max_msg_size_);
+        nav_sat_fix_raw_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>("raw/nav_sat_fix", max_msg_size_);
         nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
-        raw_imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>("map/raw_imu", max_msg_size_);
+        raw_imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>("raw/imu", max_msg_size_);
         gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
 
         if(params_.get_use_odometry()){

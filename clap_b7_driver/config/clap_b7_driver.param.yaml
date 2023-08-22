@@ -30,6 +30,7 @@
       odometry_frame: "odom"
 
     origin_config:
+      use_local_origin: false
       latitude: 0.0
       longitude: 0.0
       altitude: 0.0
