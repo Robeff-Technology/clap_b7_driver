@@ -20,6 +20,9 @@ namespace clap_b7{
         void try_serial_connection(std::basic_string<char> port, unsigned int baud);
         std::string port_;
         int baudrate_;
+        int current_port;
+        bool different_baudrate;
+        int new_baudrate_;
         CallbackAsyncSerial serial_;
         std::vector<std::string> commands_;
         bool command_detected_{false};

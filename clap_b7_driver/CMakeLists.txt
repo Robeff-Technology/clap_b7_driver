@@ -32,8 +32,6 @@ set(msg_files
         )
 
 
-
-
 rosidl_generate_interfaces(${PROJECT_NAME}
           ${msg_files}
           DEPENDENCIES
@@ -67,6 +65,7 @@ add_executable(clap_b7_driver_node
 add_executable(config_clap_b7_node
         ${TARGET_SRC_CONFIG}
         )
+
 ament_target_dependencies(clap_b7_driver_node
         rclcpp
         std_msgs
@@ -106,6 +105,9 @@ install(DIRECTORY
 
 
 rosidl_target_interfaces(clap_b7_driver_node
+        ${PROJECT_NAME} "rosidl_typesupport_cpp")
+
+rosidl_target_interfaces(config_clap_b7_node
         ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 if(BUILD_TESTING)

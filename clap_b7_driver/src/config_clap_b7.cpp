@@ -6,13 +6,17 @@
 namespace clap_b7{
 
    ConfigClap::ConfigClap() : Node("clap_b7_config"){
-        success_cmd_cnt_ = 0;
+        success_cmd_cnt_ = 1;
         rclcpp::NodeOptions node_opt;
         node_opt.automatically_declare_parameters_from_overrides(true);
         rclcpp::Node n_private("npv", "", node_opt);
         n_private.get_parameter_or<std::string>("serial_config.port", port_, "/dev/ttyUSB0");
         n_private.get_parameter_or<int>("serial_config.baudrate", baudrate_, 460800);
+        n_private.get_parameter_or<int>("serial_config.clap_port", current_port, 1);
         load_commands(n_private);
+        if(different_baudrate){
+            RCLCPP_INFO(this->get_logger(), "Different baudrate is set for port %d current baudrate = %d new baudrate = %d", current_port, baudrate_, new_baudrate_);
+        }
         ConfigClap::try_serial_connection(port_, baudrate_);
         serial_.setCallback(std::bind(&ConfigClap::serial_read_callback, this, std::placeholders::_1, std::placeholders::_2));
         if(!commands_.empty()){
@@ -20,7 +24,15 @@ namespace clap_b7{
                 RCLCPP_INFO(this->get_logger(), "-------------------------------------------------------");
                 RCLCPP_INFO(this->get_logger(), "Sending command: %s", elements.c_str());
                 serial_.write(elements.c_str(), elements.size());
-                rclcpp::sleep_for(std::chrono::milliseconds(2000));
+
+                if(elements.find("config com" + std::to_string(current_port)) != std::string::npos){
+                    if(different_baudrate){
+                    RCLCPP_INFO(this->get_logger(), "Changing baudrate to %d", new_baudrate_);
+                    try_serial_connection(port_, new_baudrate_);
+                    success_cmd_cnt_++;
+                    }
+                }
+                rclcpp::sleep_for(std::chrono::milliseconds(1000));
             }
         }
         else{
@@ -28,9 +40,8 @@ namespace clap_b7{
             rclcpp::shutdown();
         }
 
-
         if(success_cmd_cnt_ == commands_.size()){
-            RCLCPP_INFO(this->get_logger(), "All commands are sent successfully");
+            RCLCPP_INFO(this->get_logger(), "\033[32mAll commands are sent successfully\033[0m");
             serial_.write("saveconfig\r\n", 12);
             rclcpp::sleep_for(std::chrono::seconds(2));
         }
@@ -53,7 +64,7 @@ namespace clap_b7{
             }
         }while(!serial_.isOpen());
 
-        RCLCPP_INFO(this->get_logger(), "Connected to serial port(%s)", port.c_str());
+        RCLCPP_INFO(this->get_logger(), "\033[32mConnected to serial port(%s, %s)\033[0m", port.c_str(), std::to_string(baud).c_str());
     }
 
     void ConfigClap::serial_read_callback(const char *data, size_t len) {
@@ -67,8 +78,7 @@ namespace clap_b7{
                     command_detected_ = false;
                     if(receive_string_.find("OK") != std::string::npos){
                         success_cmd_cnt_++;
-                        RCLCPP_INFO(this->get_logger(), "Command loaded successfully: %s", receive_string_.c_str());
-                        RCLCPP_INFO(this->get_logger(), "-------------------------------------------------------");
+                        RCLCPP_INFO(this->get_logger(), "\033[32mCommand loaded successfully: %s\033[0m", receive_string_.c_str());
                     }
                     receive_string_.clear();
                 }
@@ -90,14 +100,36 @@ namespace clap_b7{
        command = "config com1 " + std::to_string(param_) + "\r\n";
        commands_.push_back(command);
 
+       if(current_port == 1){
+           if(param_ != baudrate_) {
+               different_baudrate = true;
+               new_baudrate_ = param_;
+           }
+       }
+
 
         node.get_parameter_or<int>("port2_config.baudrate", param_, 460800);
         command = "config com2 " + std::to_string(param_) + "\r\n";
         commands_.push_back(command);
 
+        if(current_port == 2){
+            if(param_ != baudrate_) {
+                different_baudrate = true;
+                new_baudrate_ = param_;
+            }
+        }
+
         node.get_parameter_or<int>("port3_config.baudrate", param_, 460800);
         command = "config com3 " + std::to_string(param_) + "\r\n";
         commands_.push_back(command);
+
+        if(current_port == 3){
+            if(param_ != baudrate_)
+            {
+                different_baudrate = true;
+                new_baudrate_ = param_;
+            }
+        }
 
         bool pps_enable;
         node.get_parameter_or<bool>("pps_config.enable", pps_enable, true);
