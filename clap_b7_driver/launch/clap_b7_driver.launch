@@ -1,5 +1,0 @@
-     <launch>
-       <node name="clap_b7_driver" pkg="clap_b7_driver_node" type="clap_b7_driver" output="screen">
-       	<rosparam command="load" file="$(find clap_b7_driver)/config/clap_b7_driver.param.yaml" />
-       </node>
-     </launch>

@@ -13,7 +13,7 @@
 #include <clap_b7_driver/msg/clap_ins.hpp>
 #include <clap_b7_driver/msg/clap_ecef.hpp>
 
-#include <clap_b7_driver/clap_config.h>
+#include <clap_b7_driver/clap_config_params.h>
 
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
@@ -55,7 +55,7 @@ namespace clap_b7{
         rclcpp::Publisher<clap_b7_driver::msg::ClapHeading>::SharedPtr heading_pub_;
         rclcpp::Publisher<clap_b7_driver::msg::ClapImu>::SharedPtr adis16470_imu_pub_;
         rclcpp::Publisher<clap_b7_driver::msg::ClapIns>::SharedPtr ins_pub_;
-        rclcpp::Publisher<clap_b7_driver::msg::ClapECEF>::SharedPtr pub_ecef;
+        rclcpp::Publisher<clap_b7_driver::msg::ClapECEF>::SharedPtr pub_ecef_;
     public:
 
         void init_std_msgs_publisher(rclcpp::Node &ref_ros_node,clap_b7::ConfigParams params_);
@@ -76,7 +76,6 @@ namespace clap_b7{
         void
         publish_autoware_orientation(
                 const autoware_sensing_msgs::msg::GnssInsOrientationStamped &autoware_orientation_msg);
-
         void publish_gnss_odom(const nav_msgs::msg::Odometry &gnss_odom_msg);
 
         void broadcast_transforms(const geometry_msgs::msg::TransformStamped &gnss_odom_tf_);

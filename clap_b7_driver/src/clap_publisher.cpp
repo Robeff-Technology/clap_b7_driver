@@ -3,6 +3,7 @@
 #include <clap_b7_driver/clap_publisher.h>
 
 
+
 namespace clap_b7 {
 
     void Publishers::init_std_msgs_publisher(rclcpp::Node &ref_ros_node,
@@ -34,14 +35,13 @@ namespace clap_b7 {
         gps_vel_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapGpsVel>("clap/clap_gnss_vel", max_msg_size_);
         adis16470_imu_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapImu>("clap/clap_adis16470", max_msg_size_);
         ins_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapIns>("clap/clap_ins", max_msg_size_);
-        pub_ecef = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapECEF>("ecef_pos", max_msg_size_);
+        pub_ecef_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapECEF>("clap/ecef_pos", max_msg_size_);
     }
 
     void Publishers::publish_ins(const clap_b7_driver::msg::ClapIns &ins_msg) {
         if(ins_pub_){
             ins_pub_->publish(ins_msg);
         }
-
     }
 
     void Publishers::publish_temperature(const sensor_msgs::msg::Temperature& temperature_msg){
@@ -57,11 +57,6 @@ namespace clap_b7 {
     void Publishers::publish_nav_sat_fix(const sensor_msgs::msg::NavSatFix& nav_sat_fix_msg){
         if(nav_sat_fix_pub_){
             nav_sat_fix_pub_->publish(nav_sat_fix_msg);
-        }
-    }
-    void Publishers::publish_twist(const geometry_msgs::msg::TwistWithCovarianceStamped& twist_msg){
-        if(twist_pub_){
-            twist_pub_->publish(twist_msg);
         }
     }
     void Publishers::publish_gps_pos(const clap_b7_driver::msg::ClapGpsPos& gps_pos_msg){
@@ -84,11 +79,6 @@ namespace clap_b7 {
             adis16470_imu_pub_->publish(adis16470_imu_msg);
         }
     }
-    void Publishers::publish_autoware_orientation(const autoware_sensing_msgs::msg::GnssInsOrientationStamped& autoware_orientation_msg){
-        if(gnss_ins_orientation_pub_){
-            gnss_ins_orientation_pub_->publish(autoware_orientation_msg);
-        }
-    }
 
     void Publishers::publish_gnss_odom(const nav_msgs::msg::Odometry& gnss_odom_msg){
         if(gnss_odom_pub_){
@@ -109,8 +99,8 @@ namespace clap_b7 {
     }
 
     void Publishers:: publish_ecef(const clap_b7_driver::msg::ClapECEF& ecef_msg){
-        if(pub_ecef) {
-            pub_ecef->publish(ecef_msg);
+        if(pub_ecef_) {
+            pub_ecef_->publish(ecef_msg);
         }
     }
 

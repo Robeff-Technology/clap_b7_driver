@@ -2,9 +2,10 @@
 // Created by elaydin on 07.07.2023.
 //
 
-#include <math.h>
+#include <cmath>
 
 #include <clap_b7_driver/clap_b7_driver.hpp>
+#include <clap_b7_driver/clap_config_params.h>
 
 
 
@@ -25,7 +26,7 @@ namespace clap_b7{
         }
 
         if(params_.get_sub_ntrip_msgs()){
-            rtcm_sub_= this->create_subscription<mavros_msgs::msg::RTCM>(params_.get_rtcm_topic(), 10,
+            rtcm_sub_ = this->create_subscription<mavros_msgs::msg::RTCM>(params_.get_rtcm_topic(), 10,
                                                               std::bind(&ClapB7Driver::rtcm_callback, this,
                                                                         std::placeholders::_1));
             RCLCPP_INFO(this->get_logger(), "RTCM subscriber is created %s", params_.get_rtcm_topic().c_str());
@@ -60,7 +61,7 @@ namespace clap_b7{
         params_.load_parameters(n_private);
     }
 
-    void ClapB7Driver::try_serial_connection(std::basic_string<char> port, unsigned int baud) {
+    void ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
         // try to connect serial
         do {
             RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");
@@ -98,9 +99,6 @@ namespace clap_b7{
                 heading_.heading = static_cast<float>(ClapMsgWrapper::add_heading_offset(heading_.heading, params_.get_true_heading_offset()));
                 auto msg = msg_wrapper_.create_gps_heading_msg(heading_, params_.get_gnss_frame());
                 publishers_.publish_heading(msg);
-
-                auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_,params_.get_gnss_frame());
-                publishers_.publish_autoware_orientation(autoware_msg);
                 break;
             }
 
@@ -115,8 +113,6 @@ namespace clap_b7{
 
             case clap_b7::BinaryParser::MessageId::kBestGnssVel: {
                 memcpy(&gnss_vel_, data, sizeof(BestGnssVel));
-                auto msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
-                publishers_.publish_twist(msg);
 
                 auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, params_.get_gnss_frame());
                 publishers_.publish_gps_vel(custom_msg);

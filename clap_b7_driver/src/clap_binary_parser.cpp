@@ -7,7 +7,6 @@
 #include <algorithm>
 #include "rclcpp/rclcpp.hpp"
 
-std::vector<uint8_t> synchs_control = {0xAA, 0x44, 0x12};
 constexpr int64_t second_to_nanosecond = 1000000000;
 constexpr int64_t millisecond_to_nanosecond = 1000000;
 constexpr int64_t unix_time_offset = 315964782000000000;

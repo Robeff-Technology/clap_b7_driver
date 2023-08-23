@@ -63,32 +63,6 @@ namespace clap_b7{
         return header;
     }
 
-    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const clap_b7::BestGnssVel& gnss_vel, float heading, const clap_b7::RawImu& imu, std::string frame_id) const{
-        geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
-        twist_msg.header = create_header(std::move(frame_id));
-        if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
-            twist_msg.twist.twist.linear.x = gnss_vel.horizontal_speed;
-        }
-        else{
-            twist_msg.twist.twist.linear.x = -gnss_vel.horizontal_speed;
-        }
-
-        twist_msg.twist.twist.linear.y = 0.0;
-        twist_msg.twist.twist.linear.z = 0.0;
-
-        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
-        twist_msg.twist.twist.angular.y = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
-        twist_msg.twist.twist.angular.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
-
-        twist_msg.twist.covariance[0] = 0.04;
-        twist_msg.twist.covariance[7]  = 10000.0;
-        twist_msg.twist.covariance[14] = 10000.0;
-        twist_msg.twist.covariance[21] = 10000.0;
-        twist_msg.twist.covariance[28] = 10000.0;
-        twist_msg.twist.covariance[35] = 0.02;
-        return twist_msg;
-    }
-
     sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::InsPvax& ins, std::string frame_id) const {
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
 
@@ -209,8 +183,8 @@ namespace clap_b7{
          * angular velocity and linear acceleration covariance is not provided by clap b7
          */
         for(size_t i = 0; i < 9; i += 4){
-            imu_msg.angular_velocity_covariance[i] = 0.01;
-            imu_msg.linear_acceleration_covariance[i] = 0.01;
+            imu_msg.angular_velocity_covariance[i] = 0.00;
+            imu_msg.linear_acceleration_covariance[i] = 0.00;
         }
 
         return imu_msg;
@@ -331,37 +305,13 @@ namespace clap_b7{
         return heading_offset;
     }
 
-    autoware_sensing_msgs::msg::GnssInsOrientationStamped ClapMsgWrapper::create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const {
-        autoware_sensing_msgs::msg::GnssInsOrientationStamped orientation_msg;
-        orientation_msg.header = create_header(std::move(frame_id));
-        tf2::Quaternion q;
-
-        /*
-        * in clap b7 roll-> y-axis pitch-> x axis azimuth->left-handed rotation around z-axis
-        * in ros imu msg roll-> x-axis pitch-> y axis azimuth->right-handed rotation around z-axis
-        */
-        q.setRPY(degree2radian(heading.pitch), degree2radian(ins.roll), degree2radian(-heading.heading));
-
-        orientation_msg.orientation.orientation.x = q.x();
-        orientation_msg.orientation.orientation.y = q.y();
-        orientation_msg.orientation.orientation.z = q.z();
-        orientation_msg.orientation.orientation.w = q.w();
-
-
-        orientation_msg.orientation.rmse_rotation_x = heading.std_dev_pitch * heading.std_dev_pitch;
-        orientation_msg.orientation.rmse_rotation_y = ins.std_dev_roll * ins.std_dev_roll;
-        orientation_msg.orientation.rmse_rotation_z = heading.std_dev_heading * heading.std_dev_heading;
-
-        return orientation_msg;
-    }
-
     nav_msgs::msg::Odometry ClapMsgWrapper::create_odom_msg(const InsPvax& ins, const RawImu& imu, double x, double y, double z, std::string frame_id, std::string child_frame_id) const {
 
         nav_msgs::msg::Odometry odom_msg;
 
         odom_msg.header = create_header(std::move(frame_id));
 
-        odom_msg.child_frame_id = child_frame_id;
+        odom_msg.child_frame_id = std::move(child_frame_id);
 
         tf2::Quaternion q;
 
@@ -449,9 +399,9 @@ namespace clap_b7{
         twist_msg.twist.twist.angular.y = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
         twist_msg.twist.twist.angular.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
 
-        twist_msg.twist.covariance[0] = ecef.std_vel_x;
-        twist_msg.twist.covariance[7]  = ecef.std_vel_y;
-        twist_msg.twist.covariance[14] = ecef.std_vel_z;
+        twist_msg.twist.covariance[0] = ecef.std_vel_x * ecef.std_vel_x;
+        twist_msg.twist.covariance[7]  = ecef.std_vel_y * ecef.std_vel_y;
+        twist_msg.twist.covariance[14] = ecef.std_vel_z * ecef.std_vel_z;
         twist_msg.twist.covariance[21] = 0.0;
         twist_msg.twist.covariance[28] = 0.0;
         twist_msg.twist.covariance[35] = 0.0;

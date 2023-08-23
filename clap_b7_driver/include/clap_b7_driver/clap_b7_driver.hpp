@@ -9,7 +9,6 @@
 #include "clap_b7_driver/clap_binary_parser.h"
 #include <clap_b7_driver/clap_msg_wrapper.h>
 #include <clap_b7_driver/clap_structs.h>
-#include <clap_b7_driver/clap_config.h>
 #include <clap_b7_driver/clap_publisher.h>
 #include <clap_b7_driver/ll_to_utm_transform.h>
 
@@ -31,7 +30,7 @@ namespace clap_b7
     private:
         CallbackAsyncSerial serial_;
         void serial_read_callback(const char *data, size_t len);
-        void try_serial_connection(std::basic_string<char> port, unsigned int baud);
+        void try_serial_connection(const std::basic_string<char>& port, unsigned int baud);
         clap_b7::BinaryParser parser_{};
         void clap_read_callback(const uint8_t *data, uint16_t id);
         rclcpp::TimerBase::SharedPtr timer_;

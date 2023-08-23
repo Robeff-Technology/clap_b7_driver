@@ -51,7 +51,6 @@ namespace clap_b7{
 
         geometry_msgs::msg::TwistWithCovarianceStamped
         create_twist_msg(const BestGnssVel& gnss_vel, float heading, const RawImu& imu, std::string frame_id) const;
-
         std_msgs::msg::Header create_header(std::string frame_id) const;
 
         clap_b7_driver::msg::ClapGpsPos create_gps_pos_msg(const BestGnssPos &gnss_pos, std::string frame_id) const;
@@ -67,7 +66,6 @@ namespace clap_b7{
         sensor_msgs::msg::Temperature create_temperature_msg(const RawImu &raw_imu, std::string frame_id) const;
 
         autoware_sensing_msgs::msg::GnssInsOrientationStamped create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const;
-
         static double add_heading_offset(double heading, double offset);
 
         geometry_msgs::msg::TransformStamped
