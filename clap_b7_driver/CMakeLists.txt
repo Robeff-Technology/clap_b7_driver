@@ -76,6 +76,10 @@ add_executable(clap_b7_driver_node
         ${TARGET_SRC}
         )
 
+add_executable(config_clap_b7_node
+        ${TARGET_SRC_CONFIG}
+        )
+
 target_link_libraries(clap_b7_driver_node
         Geographic
 )

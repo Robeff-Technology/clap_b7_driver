@@ -408,19 +408,36 @@ namespace clap_b7{
         return twist_msg;
     }
 
+    double ClapMsgWrapper::scale_angle(double angle){
+        double scaled_angle = angle;
+        if(angle < 0.0){
+            scaled_angle = 360.0 + angle;
+        }
+        else if(angle > 360.0){
+            scaled_angle = angle - 360.0;
+        }
+        return angle;
+    }
     sensor_msgs::msg::Imu ClapMsgWrapper::create_raw_imu_msg(const RawImu &imu, std::string frame_id) const{
         sensor_msgs::msg::Imu imu_msg;
         imu_msg.header = create_header(std::move(frame_id));
         tf2::Quaternion q;
-        static double roll = 0.0;
-        static double pitch = 0.0;
-        static double yaw = 0.0;
+        static double roll_gyro = 0.0;
+        static double pitch_gyro = 0.0;
+        static double yaw_gyro = 0.0;
 
-        roll += degree2radian(raw_gyro_to_deg(imu.x_gyro_output)) ;
-        pitch += degree2radian(raw_gyro_to_deg(imu.y_gyro_output));
-        yaw += degree2radian(raw_gyro_to_deg(imu.z_gyro_output));
+        double roll_acc = atan2(raw_acc_to_m_s2(imu.y_accel_output), raw_acc_to_m_s2(imu.z_accel_output));
+        double pitch_acc = atan2(-raw_acc_to_m_s2(imu.x_accel_output), sqrt(raw_acc_to_m_s2(imu.y_accel_output) * raw_acc_to_m_s2(imu.y_accel_output) + raw_acc_to_m_s2(imu.z_accel_output) * raw_acc_to_m_s2(imu.z_accel_output)));
 
-        q.setRPY(roll, pitch, yaw);
+        roll_gyro += raw_gyro_to_deg(imu.x_gyro_output) ;
+        pitch_gyro += raw_gyro_to_deg(imu.y_gyro_output);
+        yaw_gyro += raw_gyro_to_deg(imu.z_gyro_output);
+
+        double roll = roll_acc * 0.02 + roll_gyro * 0.98;
+        double pitch = pitch_acc * 0.02 + pitch_gyro * 0.98;
+        double yaw = yaw_gyro;
+
+        q.setRPY(degree2radian(scale_angle(roll)), degree2radian(scale_angle(pitch)), degree2radian(scale_angle(yaw)));
 
         /*
          * in clap b7     roll->y-axis     pitch-> x axis     azimuth->left-handed rotation around z-axis

@@ -21,7 +21,7 @@ namespace clap_b7{
         std::string port_;
         int baudrate_;
         int current_port;
-        bool different_baudrate;
+        bool different_baudrate{false};
         int new_baudrate_;
         CallbackAsyncSerial serial_;
         std::vector<std::string> commands_;

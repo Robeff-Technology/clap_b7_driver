@@ -6,18 +6,20 @@
 namespace clap_b7{
 
    ConfigClap::ConfigClap() : Node("clap_b7_config"){
-        success_cmd_cnt_ = 1;
+        success_cmd_cnt_ = 0;
         rclcpp::NodeOptions node_opt;
         node_opt.automatically_declare_parameters_from_overrides(true);
         rclcpp::Node n_private("npv", "", node_opt);
         n_private.get_parameter_or<std::string>("serial_config.port", port_, "/dev/ttyUSB0");
         n_private.get_parameter_or<int>("serial_config.baudrate", baudrate_, 460800);
         n_private.get_parameter_or<int>("serial_config.clap_port", current_port, 1);
+        new_baudrate_ = baudrate_;
         load_commands(n_private);
         if(different_baudrate){
             RCLCPP_INFO(this->get_logger(), "Different baudrate is set for port %d current baudrate = %d new baudrate = %d", current_port, baudrate_, new_baudrate_);
         }
         ConfigClap::try_serial_connection(port_, baudrate_);
+        rclcpp::sleep_for(std::chrono::milliseconds(2000));
         serial_.setCallback(std::bind(&ConfigClap::serial_read_callback, this, std::placeholders::_1, std::placeholders::_2));
         if(!commands_.empty()){
             for(const auto& elements : commands_){
@@ -40,7 +42,7 @@ namespace clap_b7{
             rclcpp::shutdown();
         }
 
-        if(success_cmd_cnt_ == commands_.size()){
+        if(success_cmd_cnt_ >= commands_.size() - 1){
             RCLCPP_INFO(this->get_logger(), "\033[32mAll commands are sent successfully\033[0m");
             serial_.write("saveconfig\r\n", 12);
             rclcpp::sleep_for(std::chrono::seconds(2));

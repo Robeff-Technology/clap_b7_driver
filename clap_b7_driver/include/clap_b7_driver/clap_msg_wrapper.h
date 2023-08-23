@@ -86,6 +86,8 @@ namespace clap_b7{
         sensor_msgs::msg::Imu create_raw_imu_msg(const RawImu &imu, std::string frame_id) const;
 
         static double raw_gyro_to_deg(int32_t raw_gyro);
+
+        static double scale_angle(double angle);
     };
 
 } // namespace clap_b7

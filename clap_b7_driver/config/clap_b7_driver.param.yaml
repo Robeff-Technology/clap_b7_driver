@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     serial_config:
-      port: "/dev/ttyUSB0" # current port name of the device
+      port: "/dev/ttyCLAP" # current port name of the device
       baudrate: 460800 # current baudrate of the device
 
     topic_config:

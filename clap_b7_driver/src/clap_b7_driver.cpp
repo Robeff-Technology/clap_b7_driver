@@ -168,6 +168,7 @@ namespace clap_b7{
         }
     }
     void ClapB7Driver::serial_read_callback(const char *data, size_t len) {
+        RCLCPP_INFO(this->get_logger(), "Received %d bytes", len);
         parser_.received_new_data(reinterpret_cast<const uint8_t*>(data), static_cast<uint16_t>(len));
     }
 
