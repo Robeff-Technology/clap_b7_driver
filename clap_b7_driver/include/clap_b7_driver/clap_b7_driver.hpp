@@ -47,6 +47,7 @@ namespace clap_b7
         BestGnssVel gnss_vel_{};
         UniHeading heading_{};
         ECEF ecef_{};
+        TimeDWheelData wheel_data_{};
 
         /*
          * Config

@@ -100,6 +100,15 @@ namespace clap_b7 {
         uint8_t gps_glonass_sig_mask{};
     }__attribute__((packed));
 
+    struct TimeDWheelData {
+        uint16_t ticks_per_rev{};
+        uint16_t wheel_speed{};
+        float f_wheel_speed{};
+        uint32_t reserved{};
+        uint32_t direction{};
+        int32_t cumulative_ticks{};
+    }__attribute__((packed));
+
     struct UniHeading {
         uint32_t sol_status{};
         uint32_t pos_type{};

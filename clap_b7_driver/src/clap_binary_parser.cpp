@@ -11,6 +11,10 @@ constexpr int64_t second_to_nanosecond = 1000000000;
 constexpr int64_t millisecond_to_nanosecond = 1000000;
 constexpr int64_t unix_time_offset = 315964782000000000;
 
+
+constexpr uint8_t first_synch = 0xAAU;
+constexpr uint8_t second_synch = 0x44U;
+constexpr uint8_t third_synch = 0x12U;
 constexpr uint16_t crc_len = 4;
 
 namespace clap_b7 {
@@ -65,6 +69,7 @@ namespace clap_b7 {
         int64_t gps_time = (header.ref_week_num * 7 * 24 * 60 * 60) * second_to_nanosecond + (header.week_ms * millisecond_to_nanosecond) + unix_time_offset;
         return gps_time;
     }
+
     static uint32_t calculate_crc32(const uint8_t *buffer, int size)
     {
         int iIndex;
@@ -76,55 +81,97 @@ namespace clap_b7 {
         return ulCRC;
     }
 
-    void BinaryParser::clap_parser() {
-        if((!header_detected_ && data_buffer_.size() < sizeof(clap_b7::Header)) ||
-           (header_detected_ && (static_cast<int>(data_buffer_.size()) < header_.header_length + header_.msg_len + crc_len))){
-            return;
-        }
-
-        for(size_t i = 0; i < data_buffer_.size();){
-            if(!header_detected_) {
-                auto header = reinterpret_cast<clap_b7::Header *>(data_buffer_.data() + i);
-                if(header->synch_1 == 0xAA && header->synch_2 == 0x44 && header->synch_3 == 0x12 &&  data_buffer_.size() >= sizeof(clap_b7::Header)) {
-                    header_detected_ = true;
-                    header_.header_length = header->header_length;
-                    header_.msg_len = header->msg_len;
-                    header_.msg_id = header->msg_id;
-                    gnss_unix_time_ns_ = gps_time_to_unix_time_ns(*header);
-                }
-                else {
-                    i++;
-                }
-            }
-            else{
-                    uint32_t crc;
-                    auto header_start_addr = data_buffer_.data() + i;
-                    auto crc_start_addr =  header_start_addr + header_.header_length + header_.msg_len;
-                    std::copy(crc_start_addr, crc_start_addr + crc_len, reinterpret_cast<uint8_t *>(&crc));
-                    uint32_t crc_calculated = calculate_crc32(header_start_addr, header_.header_length + header_.msg_len);
-                    if(crc == crc_calculated) {
-                        if (callback_ != nullptr) {
-                            callback_(header_start_addr + header_.header_length, header_.msg_id);
-                        }
-                        data_buffer_.erase(data_buffer_.begin(),
-                                           data_buffer_.begin() + i + header_.msg_len + header_.header_length + crc_len);
-                        i = 0;
-                        header_detected_ = false;
-                    }
-                    else
-                    {
-                        i++;
-                    }
-            }
-        }
+    int64_t BinaryParser::get_unix_time_ns() {
+        return gps_time_to_unix_time_ns(header_);
     }
 
     void BinaryParser::received_new_data(const uint8_t* buffer, uint16_t size) {
+        for(uint16_t i = 0; i < size; i++)
+        {
+            switch(status_)
+            {
+                case SYNCH1_CONTROL :
+                {
+                    if(first_synch == buffer[i])
+                    {
+                        raw_data_[data_index_++] = buffer[i];
+                        status_ = SYNCH2_CONTROL;
+                    }
+                    break;
+                }
 
-        data_buffer_.insert(data_buffer_.end(), buffer, buffer + size);
+                case SYNCH2_CONTROL :
+                {
+                    if(second_synch == buffer[i])
+                    {
+                        raw_data_[data_index_++] = buffer[i];
+                        status_ = SYNCH3_CONTROL;
+                    }
+                    else
+                    {
+                        data_index_ = 0;
+                        status_ = SYNCH1_CONTROL;
+                    }
+                    break;
+                }
 
-        clap_parser();
+                case SYNCH3_CONTROL :
+                {
+                    if(third_synch == buffer[i])
+                    {
+                        raw_data_[data_index_++] = buffer[i];
+                        status_ = CLAP_B7_HEADER_LENGTH;
+                    }
+                    else
+                    {
+                        data_index_ = 0;
+                        status_ = SYNCH1_CONTROL;
+                    }
+                    break;
+                }
 
+                case CLAP_B7_HEADER_LENGTH :
+                {
+                    raw_data_[data_index_++] = buffer[i];
+                    header_.header_length = buffer[i];
+                    status_ = CLAP_B7_HEADER_ADD;
+                    break;
+                }
+
+                case CLAP_B7_HEADER_ADD :
+                {
+                    raw_data_[data_index_++] = buffer[i];
+                    if(data_index_ >= header_.header_length)
+                    {
+                        memcpy((uint8_t*)(&(header_)), (raw_data_), sizeof(Header));
+                        status_ = CLAP_B7_DATA_ADD;
+                    }
+                    break;
+                }
+                    //AGRIC Header
+                case CLAP_B7_DATA_ADD :
+                {
+                    raw_data_[data_index_++] = buffer[i];
+                    if(data_index_ >= header_.msg_len  + header_.header_length  + crc_len)
+                    {
+                        uint32_t crc;
+                        memcpy((uint8_t *)&(crc), (uint8_t*)(raw_data_ + header_.msg_len + header_.header_length), sizeof(uint32_t));
+                        if(calculate_crc32(raw_data_, (int32_t)(data_index_ - crc_len)) == crc)
+                        {
+                            if (callback_ != nullptr) {
+                                callback_(raw_data_ + header_.header_length, header_.msg_id);
+                            }
+                        }
+                        data_index_ = 0;
+                        status_ = SYNCH1_CONTROL;
+                    }
+                    break;
+                }
+
+                default :
+                    break;
+            }
+        }
     }
 
 

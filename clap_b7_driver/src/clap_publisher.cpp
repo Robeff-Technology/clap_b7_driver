@@ -36,11 +36,19 @@ namespace clap_b7 {
         adis16470_imu_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapImu>("clap/clap_adis16470", max_msg_size_);
         ins_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapIns>("clap/clap_ins", max_msg_size_);
         pub_ecef_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapECEF>("clap/ecef_pos", max_msg_size_);
+        pub_wheel_odom_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapWheelOdom>("clap/wheel_odom", max_msg_size_);
+        heading_pub_ = ref_ros_node.create_publisher<clap_b7_driver::msg::ClapHeading>("clap/heading", max_msg_size_);
     }
 
     void Publishers::publish_ins(const clap_b7_driver::msg::ClapIns &ins_msg) {
         if(ins_pub_){
             ins_pub_->publish(ins_msg);
+        }
+    }
+
+    void Publishers::publish_autoware_orientation( const autoware_sensing_msgs::msg::GnssInsOrientationStamped &autoware_orientation_msg) {
+        if(gnss_ins_orientation_pub_){
+            gnss_ins_orientation_pub_->publish(autoware_orientation_msg);
         }
     }
 
@@ -52,6 +60,12 @@ namespace clap_b7 {
     void Publishers::publish_imu(const sensor_msgs::msg::Imu& imu_msg){
         if(imu_pub_){
             imu_pub_->publish(imu_msg);
+        }
+    }
+
+    void Publishers::publish_twist(const geometry_msgs::msg::TwistWithCovarianceStamped& twist_msg){
+        if(twist_pub_){
+            twist_pub_->publish(twist_msg);
         }
     }
     void Publishers::publish_nav_sat_fix(const sensor_msgs::msg::NavSatFix& nav_sat_fix_msg){
@@ -119,6 +133,12 @@ namespace clap_b7 {
     void Publishers:: publish_raw_imu(const sensor_msgs::msg::Imu& imu_msg){
         if(raw_imu_pub_) {
             raw_imu_pub_->publish(imu_msg);
+        }
+    }
+
+    void Publishers:: publish_wheel_odom(const clap_b7_driver::msg::ClapWheelOdom &wheel_odom_msg){
+        if(pub_wheel_odom_) {
+            pub_wheel_odom_->publish(wheel_odom_msg);
         }
     }
 } // namespace clap_b7

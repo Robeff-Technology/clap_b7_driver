@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     serial_config:
-      port: "/dev/ttyCLAP" # current port name of the device
+      port: "/dev/ttyUSB0" # current port name of the device
       baudrate: 460800 # current baudrate of the device
 
     topic_config:
@@ -34,3 +34,6 @@
       latitude: 0.0
       longitude: 0.0
       altitude: 0.0
+
+    altitude_config:
+      altitude_mode: 0 # 0: orthometric, 1: ellipsoid

@@ -39,6 +39,7 @@ set(msg_files
         "msg/ClapImu.msg"
         "msg/ClapIns.msg"
         "msg/ClapECEF.msg"
+        "msg/ClapWheelOdom.msg"
         )
 
 

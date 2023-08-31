@@ -64,7 +64,7 @@ namespace clap_b7{
                 RCLCPP_ERROR(this->get_logger(), "Could not connect to serial port(%s)", exc.what());
                 rclcpp::sleep_for(std::chrono::seconds(1));
             }
-        }while(!serial_.isOpen());
+        }while(!serial_.isOpen() && rclcpp::ok());
 
         RCLCPP_INFO(this->get_logger(), "\033[32mConnected to serial port(%s, %s)\033[0m", port.c_str(), std::to_string(baud).c_str());
     }
@@ -218,11 +218,16 @@ namespace clap_b7{
         node.get_parameter_or<float>("port1_config.ecef_period", period, 0.2);
         load_log_commands("com1", period, "bestxyzb");
 
-       node.get_parameter_or<float>("port1_config.rawimu_period", period, 0.05);
+        node.get_parameter_or<float>("port1_config.wheel_speed_period", period, 0.1);
+        load_log_commands("com1", period, "timedwheeldata");
+
+       node.get_parameter_or<float>("port1_config.rawimu_period", period, 0.02);
        load_log_commands("com1", period, "rawimub");
 
-        node.get_parameter_or<float>("port1_config.inspvax_period", period, 0.02);
+       node.get_parameter_or<float>("port1_config.inspvax_period", period, 0.02);
        load_log_commands("com1", period, "inspvaxb");
+
+
 
 
        ////////////****************COM2*******************/////////////////////
@@ -245,6 +250,9 @@ namespace clap_b7{
         node.get_parameter_or<float>("port2_config.ecef_period", period, 0.0);
         load_log_commands("com2", period, "bestxyzb");
 
+        node.get_parameter_or<float>("port2_config.wheel_speed_period", period, 0.1);
+        load_log_commands("com2", period, "timedwheeldata");
+
         node.get_parameter_or<float>("port2_config.rawimu_period", period, 0.0);
         load_log_commands("com2", period, "rawimub");
 
@@ -264,6 +272,9 @@ namespace clap_b7{
 
         node.get_parameter_or<float>("port3_config.ecef_period", period, 0.0);
         load_log_commands("com3", period, "bestxyzb");
+
+        node.get_parameter_or<float>("port3_config.wheel_speed_period", period, 0.1);
+        load_log_commands("com3", period, "timedwheeldata");
 
         send_gprmc = false;
         node.get_parameter_or<bool>("port3_config.gprmc", send_gprmc, true);

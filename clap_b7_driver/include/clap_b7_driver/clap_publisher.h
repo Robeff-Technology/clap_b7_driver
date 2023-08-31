@@ -12,6 +12,7 @@
 #include <clap_b7_driver/msg/clap_imu.hpp>
 #include <clap_b7_driver/msg/clap_ins.hpp>
 #include <clap_b7_driver/msg/clap_ecef.hpp>
+#include <clap_b7_driver/msg/clap_wheel_odom.hpp>
 
 #include <clap_b7_driver/clap_config_params.h>
 
@@ -56,6 +57,7 @@ namespace clap_b7{
         rclcpp::Publisher<clap_b7_driver::msg::ClapImu>::SharedPtr adis16470_imu_pub_;
         rclcpp::Publisher<clap_b7_driver::msg::ClapIns>::SharedPtr ins_pub_;
         rclcpp::Publisher<clap_b7_driver::msg::ClapECEF>::SharedPtr pub_ecef_;
+        rclcpp::Publisher<clap_b7_driver::msg::ClapWheelOdom>::SharedPtr pub_wheel_odom_;
     public:
 
         void init_std_msgs_publisher(rclcpp::Node &ref_ros_node,clap_b7::ConfigParams params_);
@@ -73,9 +75,7 @@ namespace clap_b7{
 
         void publish_temperature(const sensor_msgs::msg::Temperature &temperature_msg);
 
-        void
-        publish_autoware_orientation(
-                const autoware_sensing_msgs::msg::GnssInsOrientationStamped &autoware_orientation_msg);
+        void publish_autoware_orientation(const autoware_sensing_msgs::msg::GnssInsOrientationStamped &autoware_orientation_msg);
         void publish_gnss_odom(const nav_msgs::msg::Odometry &gnss_odom_msg);
 
         void broadcast_transforms(const geometry_msgs::msg::TransformStamped &gnss_odom_tf_);
@@ -89,6 +89,8 @@ namespace clap_b7{
         void publish_raw_navsatfix(const sensor_msgs::msg::NavSatFix &nav_sat_fix_msg);
 
         void publish_raw_imu(const sensor_msgs::msg::Imu &imu_msg);
+
+        void publish_wheel_odom(const clap_b7_driver::msg::ClapWheelOdom &wheel_odom_msg);
     };
 
 } // namespace clap_b7

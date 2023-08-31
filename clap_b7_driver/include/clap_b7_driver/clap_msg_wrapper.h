@@ -25,6 +25,7 @@
 #include <clap_b7_driver/msg/clap_gps_vel.hpp>
 #include <clap_b7_driver/msg/clap_ins.hpp>
 #include <clap_b7_driver/msg/clap_ecef.hpp>
+#include <clap_b7_driver/msg/clap_wheel_odom.hpp>
 
 #include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
 #include <Eigen/Dense>
@@ -34,6 +35,7 @@ namespace clap_b7{
     class ClapMsgWrapper {
     private:
         bool use_ros_time_{true};
+        bool ins_initialized_{false};
         int64_t clap_timestamp{};
         static double raw_gyro_to_deg_s(int32_t raw_gyro);
         static double raw_acc_to_m_s2(int32_t raw_acc) ;
@@ -46,8 +48,8 @@ namespace clap_b7{
         void set_use_ros_time(bool use_ros_time);
         static bool is_ins_active(const clap_b7::InsPvax& ins);
         static double calc_imu_temperature(const clap_b7::RawImu& raw_imu);
-        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const InsPvax& ins, std::string frame_id) const;
-        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const BestGnssPos& gps_pos, std::string frame_id) const;
+        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const InsPvax& ins, std::string frame_id, int alt_mode) const;
+        sensor_msgs::msg::NavSatFix create_nav_sat_fix_msg(const BestGnssPos& gps_pos, std::string frame_id, int alt_mode) const;
 
         geometry_msgs::msg::TwistWithCovarianceStamped
         create_twist_msg(const BestGnssVel& gnss_vel, float heading, const RawImu& imu, std::string frame_id) const;
@@ -88,6 +90,10 @@ namespace clap_b7{
         static double raw_gyro_to_deg(int32_t raw_gyro);
 
         static double scale_angle(double angle);
+
+        clap_b7_driver::msg::ClapWheelOdom create_wheel_odom_msg(const TimeDWheelData &wheel_odom) const;
+
+        bool is_ins_initialized(const InsPvax &ins);
     };
 
 } // namespace clap_b7

@@ -32,6 +32,7 @@ namespace clap_b7{
         node.get_parameter_or<double>("origin_config.longitude",long_origin_,0.0);
         node.get_parameter_or<double>("origin_config.altitude",alt_origin_,0.0);
         node.get_parameter_or<bool>("origin_config.use_local_origin",use_local_origin_, false);
+        node.get_parameter_or<int>("altitude_config.altitude_mode", altitude_mode_, 0);
 
         RCLCPP_INFO(node.get_logger(), "Configurations are loaded.");
         RCLCPP_INFO(node.get_logger(), "----------------------------------------------------------------");
@@ -56,6 +57,7 @@ namespace clap_b7{
         RCLCPP_INFO(node.get_logger(), "lat_origin: %f", lat_origin_);
         RCLCPP_INFO(node.get_logger(), "long_origin: %f", long_origin_);
         RCLCPP_INFO(node.get_logger(), "alt_origin: %f", alt_origin_);
+        RCLCPP_INFO(node.get_logger(), "altitude_mode: %s", altitude_mode_ > 0? "orthometric" : "ellipsoid");
         RCLCPP_INFO(node.get_logger(), "----------------------------------------------------------------");
     }
 
@@ -141,6 +143,10 @@ namespace clap_b7{
 
     bool ConfigParams::get_use_local_origin(){
         return use_local_origin_;
+    }
+
+    int ConfigParams::get_altitude_mode(){
+        return altitude_mode_;
     }
 
 

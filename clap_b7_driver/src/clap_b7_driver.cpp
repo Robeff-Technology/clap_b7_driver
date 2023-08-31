@@ -62,26 +62,31 @@ namespace clap_b7{
     }
 
     void ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
-        // try to connect serial
-        do {
-            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");
-            try {
-                serial_.open(port, baud);
-            }
-            catch(boost::system::system_error &exc){
-                RCLCPP_ERROR(this->get_logger(), "Could not connect to serial port(%s)", exc.what());
-                rclcpp::sleep_for(std::chrono::seconds(1));
-            }
-        }while(!serial_.isOpen());
-
-        RCLCPP_INFO(this->get_logger(), "Connected to serial port(%s)", port.c_str());
+            do {
+                RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");
+                try {
+                    serial_.open(port, baud);
+                }
+                catch(boost::system::system_error &exc){
+                    RCLCPP_ERROR(this->get_logger(), "Could not connect to serial port(%s)", exc.what());
+                    rclcpp::sleep_for(std::chrono::seconds(1));
+                }
+            }while(!serial_.isOpen() && rclcpp::ok());
+            RCLCPP_INFO(this->get_logger(), "Connected to serial port(%s)", port.c_str());
     }
 
     void ClapB7Driver::clap_read_callback(const uint8_t *data, uint16_t id) {
-        msg_wrapper_.set_system_time(parser_.gnss_unix_time_ns_);
+        msg_wrapper_.set_system_time(parser_.get_unix_time_ns());
+
         switch(static_cast<clap_b7::BinaryParser::MessageId>(id)) {
+            case clap_b7::BinaryParser::MessageId::kWheelOdom : {
+                std::memcpy(&wheel_data_, data, sizeof(TimeDWheelData));
+                auto msg = msg_wrapper_.create_wheel_odom_msg(wheel_data_);
+                publishers_.publish_wheel_odom(msg);
+                break;
+            }
             case clap_b7::BinaryParser::MessageId::kRAWIMU: {
-                memcpy(&raw_imu_, data, sizeof(RawImu));
+                std::memcpy(&raw_imu_, data, sizeof(RawImu));
 
                 auto msg = msg_wrapper_.create_imu_msg(raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_adis16470_imu(msg);
@@ -91,11 +96,14 @@ namespace clap_b7{
 
                 auto imu_msg = msg_wrapper_.create_raw_imu_msg(raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_raw_imu(imu_msg);
+
+                auto twist_msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
+                publishers_.publish_twist(twist_msg);
                 break;
             }
 
             case clap_b7::BinaryParser::MessageId::kHeading: {
-                memcpy(&heading_, data, sizeof(UniHeading));
+                std::memcpy(&heading_, data, sizeof(UniHeading));
                 heading_.heading = static_cast<float>(ClapMsgWrapper::add_heading_offset(heading_.heading, params_.get_true_heading_offset()));
                 auto msg = msg_wrapper_.create_gps_heading_msg(heading_, params_.get_gnss_frame());
                 publishers_.publish_heading(msg);
@@ -103,16 +111,19 @@ namespace clap_b7{
             }
 
             case clap_b7::BinaryParser::MessageId::kBestGnssPos: {
-                memcpy(&gnss_pos_, data, sizeof(BestGnssPos));
+                std::memcpy(&gnss_pos_, data, sizeof(BestGnssPos));
                 auto custom_msg = msg_wrapper_.create_gps_pos_msg(gnss_pos_, params_.get_gnss_frame());
-                auto sensor_msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, params_.get_gnss_frame());
+                auto sensor_msg = msg_wrapper_.create_nav_sat_fix_msg(gnss_pos_, params_.get_gnss_frame(), params_.get_altitude_mode());
+                if(!clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
+                    publishers_.publish_nav_sat_fix(sensor_msg);
+                }
                 publishers_.publish_raw_navsatfix(sensor_msg);
                 publishers_.publish_gps_pos(custom_msg);
                 break;
             }
 
             case clap_b7::BinaryParser::MessageId::kBestGnssVel: {
-                memcpy(&gnss_vel_, data, sizeof(BestGnssVel));
+                std::memcpy(&gnss_vel_, data, sizeof(BestGnssVel));
 
                 auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, params_.get_gnss_frame());
                 publishers_.publish_gps_vel(custom_msg);
@@ -120,11 +131,9 @@ namespace clap_b7{
             }
 
             case clap_b7::BinaryParser::MessageId::kINSPVAX: {
-                memcpy(&ins_pvax_, data, sizeof(InsPvax));
+                std::memcpy(&ins_pvax_, data, sizeof(InsPvax));
                 if(clap_b7::ClapMsgWrapper::is_ins_active(ins_pvax_)){
-                    auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
-                    publishers_.publish_imu(msg);
-                    auto std_msg = msg_wrapper_.create_nav_sat_fix_msg(ins_pvax_, params_.get_gnss_frame());
+                    auto std_msg = msg_wrapper_.create_nav_sat_fix_msg(ins_pvax_, params_.get_gnss_frame(), params_.get_altitude_mode());
                     publishers_.publish_nav_sat_fix(std_msg);
                     /*
                      * ODOM
@@ -148,17 +157,26 @@ namespace clap_b7{
                         auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, x, y, z, params_.get_odometry_frame(), "base_link");
                         publishers_.publish_gnss_odom(odom_msg);
 
-                        auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
-                        publishers_.broadcast_transforms(pos_msg);
+//                        auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
+//                        publishers_.broadcast_transforms(pos_msg);
                     }
                 }
+
+                if(msg_wrapper_.is_ins_initialized(ins_pvax_)){
+                    auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
+                    publishers_.publish_imu(msg);
+
+                    auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_, params_.get_gnss_frame());
+                    publishers_.publish_autoware_orientation(autoware_msg);
+                }
+
                 auto custom_msg = msg_wrapper_.create_ins_msg(ins_pvax_, params_.get_gnss_frame());
                 publishers_.publish_ins(custom_msg);
                 break;
             }
 
             case clap_b7::BinaryParser::MessageId::kECEF: {
-                memcpy(&ecef_, data, sizeof(ECEF));
+                std::memcpy(&ecef_, data, sizeof(ECEF));
                 auto msg = msg_wrapper_.create_ecef_msg(ecef_);
                 publishers_.publish_ecef(msg);
                 auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_, params_.get_gnss_frame());
@@ -168,7 +186,6 @@ namespace clap_b7{
         }
     }
     void ClapB7Driver::serial_read_callback(const char *data, size_t len) {
-        RCLCPP_INFO(this->get_logger(), "Received %d bytes", len);
         parser_.received_new_data(reinterpret_cast<const uint8_t*>(data), static_cast<uint16_t>(len));
     }
 

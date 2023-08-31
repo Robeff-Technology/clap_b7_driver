@@ -25,6 +25,12 @@ namespace clap_b7{
         return ins.ins_status > 1;
     }
 
+    bool ClapMsgWrapper::is_ins_initialized(const clap_b7::InsPvax& ins){
+        if(ins.ins_status > 1)
+            ins_initialized_ = true;
+        return ins_initialized_;
+    }
+
     double ClapMsgWrapper::calc_imu_temperature(const clap_b7::RawImu &raw_imu) {
         auto raw_temperature = static_cast<int16_t>((raw_imu.imu_status >> 16U) & 0xFFFFU);
         return static_cast<double>(raw_temperature) * 0.1;
@@ -63,7 +69,7 @@ namespace clap_b7{
         return header;
     }
 
-    sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::InsPvax& ins, std::string frame_id) const {
+    sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::InsPvax& ins, std::string frame_id, int alt_mode) const {
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
 
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
@@ -84,7 +90,14 @@ namespace clap_b7{
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = ins.latitude;
         nav_sat_fix_msg.longitude = ins.longitude;
-        nav_sat_fix_msg.altitude = ins.height;
+        if(alt_mode){
+            nav_sat_fix_msg.altitude = ins.height + ins.undulation;
+        }
+        else{
+            nav_sat_fix_msg.altitude = ins.height;
+        }
+
+
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
 
         Eigen::Matrix3d covariance_llh;
@@ -108,7 +121,7 @@ namespace clap_b7{
         return nav_sat_fix_msg;
     }
 
-    sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::BestGnssPos &gps_pos, std::string frame_id) const{
+    sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::BestGnssPos &gps_pos, std::string frame_id, int alt_mode) const{
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
 
@@ -130,8 +143,12 @@ namespace clap_b7{
         nav_sat_fix_msg.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
         nav_sat_fix_msg.latitude = gps_pos.latitude;
         nav_sat_fix_msg.longitude = gps_pos.longitude;
-        nav_sat_fix_msg.altitude = gps_pos.height;
-
+        if(alt_mode){
+            nav_sat_fix_msg.altitude = gps_pos.height + gps_pos.undulation;
+        }
+        else{
+            nav_sat_fix_msg.altitude = gps_pos.height;
+        }
 
         Eigen::Matrix3d covariance_llh;
         covariance_llh << gps_pos.std_dev_latitude * gps_pos.std_dev_latitude, 0.0, 0.0,
@@ -311,7 +328,7 @@ namespace clap_b7{
 
         odom_msg.header = create_header(std::move(frame_id));
 
-        odom_msg.child_frame_id = std::move(child_frame_id);
+        //odom_msg.child_frame_id = std::move(child_frame_id);
 
         tf2::Quaternion q;
 
@@ -387,6 +404,32 @@ namespace clap_b7{
         return ecef_msg;
     }
 
+    geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const clap_b7::BestGnssVel& gnss_vel, float heading, const clap_b7::RawImu& imu, std::string frame_id) const{
+        geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
+        twist_msg.header = create_header(std::move(frame_id));
+        if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
+            twist_msg.twist.twist.linear.x = gnss_vel.horizontal_speed;
+        }
+        else{
+            twist_msg.twist.twist.linear.x = -gnss_vel.horizontal_speed;
+        }
+
+        twist_msg.twist.twist.linear.y = 0.0;
+        twist_msg.twist.twist.linear.z = 0.0;
+
+        twist_msg.twist.twist.angular.z = degree2radian(raw_gyro_to_deg_s(imu.z_gyro_output));
+        twist_msg.twist.twist.angular.y = degree2radian(raw_gyro_to_deg_s(imu.y_gyro_output));
+        twist_msg.twist.twist.angular.x = degree2radian(raw_gyro_to_deg_s(imu.x_gyro_output));
+
+        twist_msg.twist.covariance[0] = 0.04;
+        twist_msg.twist.covariance[7]  = 10000.0;
+        twist_msg.twist.covariance[14] = 10000.0;
+        twist_msg.twist.covariance[21] = 10000.0;
+        twist_msg.twist.covariance[28] = 10000.0;
+        twist_msg.twist.covariance[35] = 0.02;
+        return twist_msg;
+    }
+
     geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const ECEF & ecef, const RawImu& imu, std::string frame_id) const{
         geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
         twist_msg.header = create_header(std::move(frame_id));
@@ -416,7 +459,7 @@ namespace clap_b7{
         else if(angle > 360.0){
             scaled_angle = angle - 360.0;
         }
-        return angle;
+        return scaled_angle;
     }
     sensor_msgs::msg::Imu ClapMsgWrapper::create_raw_imu_msg(const RawImu &imu, std::string frame_id) const{
         sensor_msgs::msg::Imu imu_msg;
@@ -429,9 +472,10 @@ namespace clap_b7{
         double roll_acc = atan2(raw_acc_to_m_s2(imu.y_accel_output), raw_acc_to_m_s2(imu.z_accel_output));
         double pitch_acc = atan2(-raw_acc_to_m_s2(imu.x_accel_output), sqrt(raw_acc_to_m_s2(imu.y_accel_output) * raw_acc_to_m_s2(imu.y_accel_output) + raw_acc_to_m_s2(imu.z_accel_output) * raw_acc_to_m_s2(imu.z_accel_output)));
 
-        roll_gyro += raw_gyro_to_deg(imu.x_gyro_output) ;
+        roll_gyro += raw_gyro_to_deg(imu.x_gyro_output);
         pitch_gyro += raw_gyro_to_deg(imu.y_gyro_output);
         yaw_gyro += raw_gyro_to_deg(imu.z_gyro_output);
+
 
         double roll = roll_acc * 0.02 + roll_gyro * 0.98;
         double pitch = pitch_acc * 0.02 + pitch_gyro * 0.98;
@@ -469,5 +513,40 @@ namespace clap_b7{
             imu_msg.linear_acceleration_covariance[i] = 0.001;
         }
         return imu_msg;
+    }
+    clap_b7_driver::msg::ClapWheelOdom ClapMsgWrapper::create_wheel_odom_msg(const TimeDWheelData &wheel_odom) const{
+        static int32_t prev_ticks = 0;
+        clap_b7_driver::msg::ClapWheelOdom wheel_odom_msg;
+        wheel_odom_msg.ticks_per_rev = wheel_odom.cumulative_ticks - prev_ticks;
+        wheel_odom_msg.wheel_speed = static_cast<uint16_t>(wheel_odom_msg.ticks_per_rev / 4);
+        wheel_odom_msg.f_wheel_speed = wheel_odom.f_wheel_speed;
+        wheel_odom_msg.direction = wheel_odom.direction;
+        wheel_odom_msg.cumulative_ticks = wheel_odom.cumulative_ticks;
+        prev_ticks = wheel_odom.cumulative_ticks;
+        return wheel_odom_msg;
+    }
+
+    autoware_sensing_msgs::msg::GnssInsOrientationStamped ClapMsgWrapper::create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const {
+        autoware_sensing_msgs::msg::GnssInsOrientationStamped orientation_msg;
+        orientation_msg.header = create_header(std::move(frame_id));
+        tf2::Quaternion q;
+
+        /*
+        * in clap b7 roll-> y-axis pitch-> x axis azimuth->left-handed rotation around z-axis
+        * in ros imu msg roll-> x-axis pitch-> y axis azimuth->right-handed rotation around z-axis
+        */
+        q.setRPY(degree2radian(heading.pitch), degree2radian(ins.roll), degree2radian(-heading.heading));
+
+        orientation_msg.orientation.orientation.x = q.x();
+        orientation_msg.orientation.orientation.y = q.y();
+        orientation_msg.orientation.orientation.z = q.z();
+        orientation_msg.orientation.orientation.w = q.w();
+
+
+        orientation_msg.orientation.rmse_rotation_x = heading.std_dev_pitch * heading.std_dev_pitch;
+        orientation_msg.orientation.rmse_rotation_y = ins.std_dev_roll * ins.std_dev_roll;
+        orientation_msg.orientation.rmse_rotation_z = heading.std_dev_heading * heading.std_dev_heading;
+
+        return orientation_msg;
     }
 } // namespace clap_b7

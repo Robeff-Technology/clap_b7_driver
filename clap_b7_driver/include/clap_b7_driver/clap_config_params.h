@@ -25,6 +25,7 @@ namespace clap_b7{
         std::string autoware_orientation_topic_;
         std::string gnss_frame_;
         double true_heading_offset_;
+        int altitude_mode_;
 
         bool use_odometry_;
         std::string odometry_topic_;
@@ -79,6 +80,7 @@ namespace clap_b7{
 
         bool get_use_local_origin();
 
+        int get_altitude_mode();
     };
 }
 #endif//CLAP_CONFIG_H
