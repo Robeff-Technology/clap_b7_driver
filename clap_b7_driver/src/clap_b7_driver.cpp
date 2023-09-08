@@ -157,8 +157,8 @@ namespace clap_b7{
                         auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, x, y, z, params_.get_odometry_frame(), "base_link");
                         publishers_.publish_gnss_odom(odom_msg);
 
-//                        auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
-//                        publishers_.broadcast_transforms(pos_msg);
+                        auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
+                        publishers_.broadcast_transforms(pos_msg);
                     }
                 }
 
@@ -192,6 +192,5 @@ namespace clap_b7{
     void ClapB7Driver::rtcm_callback(const mavros_msgs::msg::RTCM::SharedPtr msg) {
         const char *start_ptr = reinterpret_cast<const char*>(msg->data.data());
         serial_.write(start_ptr, msg->data.size());
-        RCLCPP_INFO(this->get_logger(), "RTCM data received");
     }
 } // namespace clap_b7

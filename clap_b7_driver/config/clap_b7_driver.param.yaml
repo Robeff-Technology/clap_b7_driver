@@ -19,7 +19,7 @@
       gnss_frame: "GNSS_INS/gnss_ins_link" # GNSS frame name
 
     true_heading_config:
-      true_heading_offset: 90.0 # true heading offset in degrees
+      true_heading_offset: 0.0 # true heading offset in degrees
 
     time_config:
       use_ros_time: false # use ROS time if true (not recommended)

@@ -26,36 +26,39 @@ Before proceeding with the installation, ensure you have the following prerequis
 
 1.  ROS2 Humble: Make sure you have a working ROS2 Humble installation. If you don't have ROS2 Humble installed, you can follow the official installation instructions: [ROS2 Installation Guide](https://docs.ros.org/en/humble/Installation.html).
 
+2.  Autoware.universe: Make sure you have a working autoware.universe installation. If you don't have autoware.universe installed, you can follow the official github repo: [autoware.universe github](https://github.com/autowarefoundation/autoware.universe).
 2.  Build Tools: Ensure you have the necessary build tools and dependencies installed on your system.
 
 ### Install the Clap-B7 ROS2 Driver
 
-1.  Clone the Repository: If your Clap-B7 ROS2 driver is hosted on a version control system like Git, clone the repository into your ROS2 workspace's source directory:
+1.  Clone the Repository: If your Clap-B7 ROS2 driver is hosted on a version control system like Git, clone the repository into your autoware workspace's source directory:
 ```
-    cd /path/to/your/ros2_workspace/src
+    cd /path_to_your_autoware_workspace/src/sensor_component/external
     git clone https://github.com/Robeff-Technology/clap_b7_driver.git 
 ```     
--   Build the Workspace: Navigate to your ROS2 workspace and build the packages:
+-   Build the Workspace: Navigate to your autoware workspace and build the packages:
     ```
-    cd /path/to/your/ros2_workspace
+    cd /path_to_your_autoware_workspace
     colcon build --packages select clap_b7_driver
     ```  
--   Source the Workspace: Source your ROS2 workspace to make the newly built Clap-B7 driver node available:
+-   Source the Workspace: Source your autoware workspace to make the newly built Clap-B7 driver node available:
     ```
-    source /path/to/your/ros2_workspace/install/setup.bash 
+    source /path_to_your_autoware_workspace/install/setup.bash 
     ```
 
 
 ### Usage
-
-1.  Launch the Clap-B7 Driver Node: To start the Clap-B7 driver node, use the provided launch file. The launch file should be located in the package's `launch` directory. Run the following command:
+1. Launch the Clap-B7 Configuration Node: To start the Clap-B7 configuration node, Run the following command:
 ```
-ros2 launch clap_b7_driver clap_b7_driver.launch.py` 
+ros2 launch clap_b7_driver config_clap_b7.launch.py 
+```
+2.  Launch the Clap-B7 Driver Node: To start the Clap-B7 driver node, use the provided launch file. The launch file should be located in the package's `launch` directory. Run the following command:
+```
+ros2 launch clap_b7_driver clap_b7_driver.launch.py 
  ```
 The launch file will start the driver node and configure it based on the default parameters.
 
-2.  Verify Data: After launching the driver, check if the GNSS and INS data are being published to the correct topics using tools like `ros2 topic echo`.
-
+3.  Verify Data: After launching the driver, check if the GNSS and INS data are being published to the correct topics using tools like `ros2 topic echo`.
 
 ### Customizing Configuration (Optional)
 
@@ -67,9 +70,8 @@ If you wish to customize the behavior of the GNSS/INS driver by adjusting its pa
 
 3.  Launch the Driver with Custom Configuration: After making the necessary changes to the configuration file, launch the driver node with the updated configuration using the following command:
 
-`ros2 launch clap_b7_driver clap_b7_driver.launch.py config:=/path/to/your/config.yaml`
+`ros2 launch clap_b7_driver clap_b7_driver.launch.py
 
-Replace `/path/to/your/config.yaml` with the actual path to your edited configuration file.
 
 
 ### Troubleshooting
@@ -101,3 +103,34 @@ The Clap-B7 ROS2 driver uses custom messages to represent specific data relevant
 
 ### `ClapIns`
 -   **Description**: Integrated navigation results and deviations.
+
+### `ClapWheelOdom`
+-   **Description**: Odometry messages according to the wheel speed to clap.
+
+## Standard Messages
+
+### `imu/Temp` [sensor_msgs/Temperature](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/Temperature.html)
+- Temperature of the IMU. Requires  `ClapImu`.
+
+### `TwistWithCovarianceStamped `[geometry_msgs/TwistWithCovarianceStamped](http://docs.ros.org/en/melodic/api/geometry_msgs/html/msg/TwistWithCovarianceStamped.html)
+- Velocity of the vehicle. Requires `ClapGpsVel`, `ClapHeading`, `ClapImu`.
+- /raw/ecef_twist : Velocity of the vehicle in ECEF. Requires `ClapECEF`.
+
+### `NavSatFix` [sensor_msgs/NavSatFix](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/NavSatFix.html)
+- Position of the vehicle. Requires `ClapIns`.
+- /raw/nav_sat_fix: Position of the vehicle without EKF. Requires `ClapGpsPos`.
+
+### `Imu` [sensor_msgs/Imu](http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/Imu.html)
+- IMU data. Requires `ClapImu`, `ClapIns`.
+- raw/imu : IMU data without EKF. Requires `ClapImu`.
+
+### `Odometry` [nav_msgs/Odometry](http://docs.ros.org/en/melodic/api/nav_msgs/html/msg/Odometry.html)
+- Odometry data. Requires `ClapIns`.
+
+## Autoware Messages
+### `GnssInsOrientationStamped` [autoware_sensing_msgs/GnssInsOrientationStamped](https://github.com/autowarefoundation/autoware_msgs/blob/main/autoware_sensing_msgs/msg/GnssInsOrientationStamped.msg)
+- Orientation of the vehicle. Requires `ClapIns`, `ClapHeading`.
+
+## Subscribed Topic
+### `RTCM` [mavros_msgs::msg::RTCM](https://docs.ros.org/en/api/mavros_msgs/html/msg/RTCM.html)
+- RTCM data for RTK. For more information [ntrip_client.](https://github.com/Robeff-Technology/ntrip_client_ros)
