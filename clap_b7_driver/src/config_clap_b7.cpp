@@ -66,7 +66,9 @@ namespace clap_b7{
             }
         }while(!serial_.isOpen() && rclcpp::ok());
 
-        RCLCPP_INFO(this->get_logger(), "\033[32mConnected to serial port(%s, %s)\033[0m", port.c_str(), std::to_string(baud).c_str());
+        if(serial_.isOpen()){
+            RCLCPP_INFO(this->get_logger(), "\033[32mConnected to serial port(%s, %s)\033[0m", port.c_str(), std::to_string(baud).c_str());
+        }
     }
 
     void ConfigClap::serial_read_callback(const char *data, size_t len) {

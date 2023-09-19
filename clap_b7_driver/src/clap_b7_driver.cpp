@@ -62,17 +62,19 @@ namespace clap_b7{
     }
 
     void ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
-            do {
-                RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");
-                try {
-                    serial_.open(port, baud);
-                }
-                catch(boost::system::system_error &exc){
-                    RCLCPP_ERROR(this->get_logger(), "Could not connect to serial port(%s)", exc.what());
-                    rclcpp::sleep_for(std::chrono::seconds(1));
-                }
-            }while(!serial_.isOpen() && rclcpp::ok());
-            RCLCPP_INFO(this->get_logger(), "Connected to serial port(%s)", port.c_str());
+        do {
+            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");
+            try {
+                serial_.open(port, baud);
+            }
+            catch(boost::system::system_error &exc){
+                RCLCPP_ERROR(this->get_logger(), "Could not connect to serial port(%s)", exc.what());
+                rclcpp::sleep_for(std::chrono::seconds(1));
+            }
+        }while(!serial_.isOpen() && rclcpp::ok());
+        if(serial_.isOpen()){
+            RCLCPP_INFO(this->get_logger(), "\033[32mConnected to serial port(%s, %s)\033[0m", port.c_str(), std::to_string(baud).c_str());
+        }
     }
 
     void ClapB7Driver::clap_read_callback(const uint8_t *data, uint16_t id) {

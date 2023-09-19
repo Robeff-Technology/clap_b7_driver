@@ -328,7 +328,7 @@ namespace clap_b7{
 
         odom_msg.header = create_header(std::move(frame_id));
 
-        //odom_msg.child_frame_id = std::move(child_frame_id);
+        odom_msg.child_frame_id = std::move(child_frame_id);
 
         tf2::Quaternion q;
 

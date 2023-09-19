@@ -16,6 +16,9 @@ namespace clap_b7{
     class ConfigClap: public rclcpp::Node {
     public:
         ConfigClap();
+        ~ConfigClap() override{
+            serial_.close();
+        }
     private:
         void try_serial_connection(std::basic_string<char> port, unsigned int baud);
         std::string port_;
@@ -28,7 +31,7 @@ namespace clap_b7{
         bool command_detected_{false};
         void serial_read_callback(const char *data, size_t len);
         std::string receive_string_;
-        int success_cmd_cnt_;
+        unsigned int success_cmd_cnt_;
         void load_commands(const rclcpp::Node& node);
         void load_log_commands(const std::string& port, float period, std::string command);
     };
