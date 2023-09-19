@@ -6,7 +6,6 @@
 namespace clap_b7{
 
    ConfigClap::ConfigClap() : Node("clap_b7_config"){
-        success_cmd_cnt_ = 0;
         rclcpp::NodeOptions node_opt;
         node_opt.automatically_declare_parameters_from_overrides(true);
         rclcpp::Node n_private("npv", "", node_opt);
@@ -31,7 +30,6 @@ namespace clap_b7{
                     if(different_baudrate){
                     RCLCPP_INFO(this->get_logger(), "Changing baudrate to %d", new_baudrate_);
                     try_serial_connection(port_, new_baudrate_);
-                    success_cmd_cnt_++;
                     }
                 }
                 rclcpp::sleep_for(std::chrono::milliseconds(1000));
@@ -41,16 +39,21 @@ namespace clap_b7{
             RCLCPP_ERROR(this->get_logger(), "No commands are loaded");
             rclcpp::shutdown();
         }
-
-        if(success_cmd_cnt_ >= commands_.size() - 1){
+        {
+            config_done = true;
             RCLCPP_INFO(this->get_logger(), "\033[32mAll commands are sent successfully\033[0m");
             serial_.write("saveconfig\r\n", 12);
             rclcpp::sleep_for(std::chrono::seconds(2));
+            serial_.write("unlog\r\n", 7);
+            rclcpp::sleep_for(std::chrono::seconds(2));
+            serial_.write("config\r\n", 8);
+            RCLCPP_INFO(this->get_logger(), "\033[32m\n\n\n----------------NEW CONFIGURATIONS-------------------\033[0m");
+            config_done = false;
+            config_save = true;
+            rclcpp::sleep_for(std::chrono::seconds(10));
+            RCLCPP_INFO(this->get_logger(), "\033[32m\n\n\n----------------CONFIGURATIONS SAVED-------------------\033[0m");
+            RCLCPP_INFO(this->get_logger(), "Please remove the power cable and restart the CLAP");
         }
-        else{
-            RCLCPP_ERROR(this->get_logger(), "Some commands are not sent successfully");
-        }
-       rclcpp::shutdown();
     }
 
     void ConfigClap::try_serial_connection(std::basic_string<char> port, unsigned int baud) {
@@ -72,25 +75,29 @@ namespace clap_b7{
     }
 
     void ConfigClap::serial_read_callback(const char *data, size_t len) {
-
-        for(size_t i = 0; i < len; i++){
-            if(data[i] == '$'){
-                command_detected_ = true;
-            }
-            if(command_detected_){
-                if(data[i] == '\n'){
-                    command_detected_ = false;
-                    if(receive_string_.find("OK") != std::string::npos){
-                        success_cmd_cnt_++;
-                        RCLCPP_INFO(this->get_logger(), "\033[32mCommand loaded successfully: %s\033[0m", receive_string_.c_str());
+        if(config_done){
+            for(size_t i = 0; i < len; i++) {
+                if (data[i] == '$') {
+                    command_detected_ = true;
+                }
+                if (command_detected_) {
+                    if (data[i] == '\n') {
+                        command_detected_ = false;
+                        if (receive_string_.find("OK") != std::string::npos) {
+                            RCLCPP_INFO(this->get_logger(), "\033[32mCommand loaded successfully: %s\033[0m",
+                                        receive_string_.c_str());
+                            serial_.write("unlog\r\n", 12);
+                        }
+                        receive_string_.clear();
                     }
-                    receive_string_.clear();
+                    else {
+                        receive_string_ += data[i];
+                    }
                 }
-                else{
-                    receive_string_ += data[i];
-                }
-
             }
+        }
+        if(config_save){
+            RCLCPP_INFO(this->get_logger(), "%s", data);
         }
     }
 

@@ -31,7 +31,8 @@ namespace clap_b7{
         bool command_detected_{false};
         void serial_read_callback(const char *data, size_t len);
         std::string receive_string_;
-        unsigned int success_cmd_cnt_;
+        bool config_done{false};
+        bool config_save{false};
         void load_commands(const rclcpp::Node& node);
         void load_log_commands(const std::string& port, float period, std::string command);
     };

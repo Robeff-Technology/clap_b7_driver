@@ -2,7 +2,7 @@
   ros__parameters:
     serial_config:
       port: "/dev/ttyUSB0" # current port name of the device
-      baudrate: 230400 # current baudrate of the device 460800 recommended
+      baudrate: 460800 # current baudrate of the device 460800 recommended
       clap_port: 1 # 1->port1 2->port2 3->port3 connected clap-b7 port to serial
 
     port1_config:
