@@ -133,4 +133,4 @@ The Clap-B7 ROS2 driver uses custom messages to represent specific data relevant
 
 ## Subscribed Topic
 ### `RTCM` [mavros_msgs::msg::RTCM](https://docs.ros.org/en/api/mavros_msgs/html/msg/RTCM.html)
-- RTCM data for RTK. For more information [ntrip_client.](https://github.com/Robeff-Technology/ntrip_client_ros)
+- RTCM data for RTK. For more information [ntrip_client.](https://github.com/Robeff-Technology/ntrip_client)
