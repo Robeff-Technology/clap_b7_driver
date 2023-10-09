@@ -4,6 +4,8 @@
 
 The Clap-B7 ROS2 driver is a software component designed to interface with a Global Navigation Satellite System (GNSS) module combined with an Inertial Navigation System (INS). The driver enables ROS2-based applications to access and utilize the raw GNSS and INS data for localization, navigation, and other related tasks.
 
+#### Author: [Robeff Technology](https://www.robeff.com)
+#### Maintainer : [Robeff Technology](mailto:support@robeff.com)
 ## Features
 
 -   **ROS2 Compatibility**: The driver is fully compatible with the ROS2 (Robot Operating System 2) ecosystem, allowing seamless integration with other ROS2 nodes and packages.
@@ -70,8 +72,9 @@ If you wish to customize the behavior of the GNSS/INS driver by adjusting its pa
 
 3.  Launch the Driver with Custom Configuration: After making the necessary changes to the configuration file, launch the driver node with the updated configuration using the following command:
 
-`ros2 launch clap_b7_driver clap_b7_driver.launch.py
-
+```
+ros2 launch clap_b7_driver clap_b7_driver.launch.py
+```
 
 
 ### Troubleshooting
