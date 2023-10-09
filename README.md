@@ -134,3 +134,47 @@ The Clap-B7 ROS2 driver uses custom messages to represent specific data relevant
 ## Subscribed Topic
 ### `RTCM` [mavros_msgs::msg::RTCM](https://docs.ros.org/en/api/mavros_msgs/html/msg/RTCM.html)
 - RTCM data for RTK. For more information [ntrip_client.](https://github.com/Robeff-Technology/ntrip_client)
+
+# Clap - B7 Configuration
+If user wants to change message period, ins configuration and pps configuration, can change the configuration file. 
+The configuration file is located in the package's `config` directory. 
+The configuration file is in the `.yaml` format and named with `config_clap_b7.param.yaml`. The following sections describe the different parameters that can be configured in the file. 
+
+## `serial_config`
+
+- `port`: The name of the serial port where the device is connected.
+- `baudrate`: The baud rate for serial communication.
+- `clap_port`: Indicates which port the "clap-b7" is connected to (e.g., port 1, port 2, port 3).
+
+## `port1_config`, `port2_config`, `port3_config`
+
+These sections configure different ports, likely for various functionalities or devices. Common parameters include:
+
+- `baudrate`: The baud rate for the respective port.
+- `rawimu_period`: The period for rawimu messages.
+- `inspvax_period`: The period for inspvax messages.
+- `uniheading_period`: The period for uniheading messages.
+- `bestgnsspos_period`: The period for bestgnsspos messages.
+- `bestgnssvel_period`: The period for bestgnssvel messages.
+- `ecef_period`: The period for ecef messages.
+- `wheel_speed_period`: The period for wheel speed messages.
+- `gprmc`: Boolean value to indicate whether to send gprmc messages.
+
+## `ins_config`
+
+- `enable`: Indicates whether the Inertial Navigation System (INS) is enabled (true) or disabled (false).
+- `timeout`: Sets the duration for INS output when losing GNSS signals (in seconds).
+- `align_velocity_threshold`: Specifies the velocity threshold for INS alignment (in m/s).
+- `lever_arm_master` and `lever_arm_slave`: Lever arm settings for the master and slave antennas relative to the IMU.
+- `lever_arm_master_error` and `lever_arm_slave_error`: Lever arm error settings for the antennas.
+- `imu_position_offset`: Position offsets for the IMU.
+
+## `pps_config`
+
+- `enable`: Indicates whether the Pulse Per Second (PPS) signal is enabled (true) or disabled (false).
+- `mode`: Sets the mode for PPS output.
+- `polarity`: Specifies the polarity of the PPS signal.
+- `width`: Sets the pulse width of the PPS signal (in microseconds).
+- `period`: Sets the period of the PPS signal (in milliseconds).
+
+These configurations allow you to customize the communication settings and behavior of the connected device within the ROS2 environment. You can adjust parameters such as baud rates, message publication periods, INS settings, and PPS settings to suit your specific requirements.

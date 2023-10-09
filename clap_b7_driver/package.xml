@@ -4,7 +4,7 @@
   <name>clap_b7_driver</name>
   <version>1.0.0</version>
   <description>Clap B7 driver</description>
-  <maintainer email="elaydin@robeff.com">elaydin</maintainer>
+  <maintainer email="support@robeff.com">Robeff</maintainer>
   <license>MIT LICENSE</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
