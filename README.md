@@ -12,9 +12,10 @@ The Clap-B7 ROS2 driver is a software component designed to interface with a Glo
 
 -   **GNSS Data**: The driver reads raw data from the GNSS module, including satellite positions, timestamps, position, velocity, and other relevant information.
 
--   **INS Data**: It retrieves data from the Inertial Navigation System, such as linear and angular accelerations, roll, pitch, and yaw angles.
+-   **INS Data**: It retrieves data from the Inertial Navigation System, such as roll, pitch, and yaw angles.
 
--   **Fused Output**: The driver can fuse GNSS and INS data using sensor fusion techniques (e.g., Extended Kalman Filter) to provide an accurate and robust localization estimate.
+-   **6-DOF IMU Data**: The Clap-B7 has a built-in [ADIS16470](https://www.analog.com/media/en/technical-documentation/data-sheets/adis16470.pdf) 6-DOF IMU (Inertial Measurement Unit) that provides data from the accelerometers and gyroscopes.
+-   **Fused Output**: The Clap-B7 GNSS module can fuse GNSS and INS data using sensor fusion techniques (e.g., Extended Kalman Filter) to provide an accurate and robust localization estimate.
 
 -   **Configurable Parameters**: Various parameters can be configured to adapt the driver to different GNSS/INS modules and user requirements.
 
@@ -37,26 +38,24 @@ Before proceeding with the installation, ensure you have the following prerequis
     ```
        sudo apt install libgeographic-dev
     ```
-        
 
-2.  Autoware.universe: Make sure you have a working autoware.universe installation. If you don't have autoware.universe installed, you can follow the official github repo: [autoware.universe github](https://github.com/autowarefoundation/autoware.universe).
 2.  Build Tools: Ensure you have the necessary build tools and dependencies installed on your system.
 
 ### Install the Clap-B7 ROS2 Driver
 
-1.  Clone the Repository: If your Clap-B7 ROS2 driver is hosted on a version control system like Git, clone the repository into your autoware workspace's source directory:
+1.  Clone the Repository:clone the repository into your autoware workspace's source directory:
 ```
-    cd /path_to_your_autoware_workspace/src/sensor_component/external
+    cd /path_to_your_ros2_workspace/src
     git clone https://github.com/Robeff-Technology/clap_b7_driver.git 
 ```     
 -   Build the Workspace: Navigate to your autoware workspace and build the packages:
     ```
-    cd /path_to_your_autoware_workspace
+    cd /path_to_your_ros2_workspace
     colcon build --packages select clap_b7_driver
     ```  
 -   Source the Workspace: Source your autoware workspace to make the newly built Clap-B7 driver node available:
     ```
-    source /path_to_your_autoware_workspace/install/setup.bash 
+    source /path_to_your_ros2_workspace/install/setup.bash 
     ```
 
 
@@ -79,7 +78,7 @@ If you wish to customize the behavior of the GNSS/INS driver by adjusting its pa
 
 1.  Locate the Configuration File: The `.yaml` configuration file should be located in the package's `config` directory.
 
-2.  Customize Parameters: Edit the `.yaml` configuration file to modify the driver's behavior according to your requirements. You can adjust parameters such as communication settings, sensor fusion parameters, and output topics.
+2.  Customize Parameters: Edit the `.yaml` configuration file to modify the driver's behavior according to your requirements. You can adjust parameters such as communication settings, ins settings and output topics.
 
 3.  Launch the Driver with Custom Configuration: After making the necessary changes to the configuration file, launch the driver node with the updated configuration using the following command:
 
@@ -141,18 +140,14 @@ The Clap-B7 ROS2 driver uses custom messages to represent specific data relevant
 ### `Odometry` [nav_msgs/Odometry](http://docs.ros.org/en/melodic/api/nav_msgs/html/msg/Odometry.html)
 - Odometry data. Requires `ClapIns`.
 
-## Autoware Messages
-### `GnssInsOrientationStamped` [autoware_sensing_msgs/GnssInsOrientationStamped](https://github.com/autowarefoundation/autoware_msgs/blob/main/autoware_sensing_msgs/msg/GnssInsOrientationStamped.msg)
-- Orientation of the vehicle. Requires `ClapIns`, `ClapHeading`.
-
 ## Subscribed Topic
 ### `RTCM` [mavros_msgs::msg::RTCM](https://docs.ros.org/en/api/mavros_msgs/html/msg/RTCM.html)
 - RTCM data for RTK. For more information [ntrip_client.](https://github.com/Robeff-Technology/ntrip_client)
 
 # Clap - B7 Configuration
-If user wants to change message period, ins configuration and pps configuration, can change the configuration file. 
-The configuration file is located in the package's `config` directory. 
-The configuration file is in the `.yaml` format and named with `config_clap_b7.param.yaml`. The following sections describe the different parameters that can be configured in the file. 
+If user wants to change message period, ins configuration and pps configuration, can change the configuration file.
+The configuration file is located in the package's `config` directory.
+The configuration file is in the `.yaml` format and named with `config_clap_b7.param.yaml`. The following sections describe the different parameters that can be configured in the file.
 
 ## `serial_config`
 
