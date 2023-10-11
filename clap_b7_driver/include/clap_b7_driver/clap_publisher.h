@@ -22,7 +22,6 @@
 #include <sensor_msgs/msg/temperature.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
-#include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 
@@ -43,7 +42,6 @@ namespace clap_b7{
         rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped >::SharedPtr twist_pub_;
         rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped >::SharedPtr twist_pub_ecef;
         rclcpp::Publisher<sensor_msgs::msg::Temperature>::SharedPtr temperature_pub_;
-        rclcpp::Publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>::SharedPtr gnss_ins_orientation_pub_;
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr gnss_odom_pub_;
         std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_odom_;
         std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
@@ -75,7 +73,6 @@ namespace clap_b7{
 
         void publish_temperature(const sensor_msgs::msg::Temperature &temperature_msg);
 
-        void publish_autoware_orientation(const autoware_sensing_msgs::msg::GnssInsOrientationStamped &autoware_orientation_msg);
         void publish_gnss_odom(const nav_msgs::msg::Odometry &gnss_odom_msg);
 
         void broadcast_transforms(const geometry_msgs::msg::TransformStamped &gnss_odom_tf_);

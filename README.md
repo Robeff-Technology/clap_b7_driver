@@ -28,6 +28,17 @@ Before proceeding with the installation, ensure you have the following prerequis
 
 1.  ROS2 Humble: Make sure you have a working ROS2 Humble installation. If you don't have ROS2 Humble installed, you can follow the official installation instructions: [ROS2 Installation Guide](https://docs.ros.org/en/humble/Installation.html).
 
+    **Dependencies**: The driver includes additional dependencies:
+    -   [mavros_msgs](https://github.com/mavlink/mavros)
+    ```
+       sudo apt install ros-<distro>-mavros-msgs
+    ```
+    - [GeographicLib](https://geographiclib.sourceforge.io/html/)
+    ```
+       sudo apt install libgeographic-dev
+    ```
+        
+
 2.  Autoware.universe: Make sure you have a working autoware.universe installation. If you don't have autoware.universe installed, you can follow the official github repo: [autoware.universe github](https://github.com/autowarefoundation/autoware.universe).
 2.  Build Tools: Ensure you have the necessary build tools and dependencies installed on your system.
 
