@@ -169,7 +169,6 @@ These sections configure different ports, likely for various functionalities or 
 - `wheel_speed_period`: The period for wheel speed messages.
 - `gprmc`: Boolean value to indicate whether to send gprmc messages.
 
-## `ins_config`
 
 - `enable`: Indicates whether the Inertial Navigation System (INS) is enabled (true) or disabled (false).
 - `timeout`: Sets the duration for INS output when losing GNSS signals (in seconds).
@@ -187,3 +186,4 @@ These sections configure different ports, likely for various functionalities or 
 - `period`: Sets the period of the PPS signal (in milliseconds).
 
 These configurations allow you to customize the communication settings and behavior of the connected device within the ROS2 environment. You can adjust parameters such as baud rates, message publication periods, INS settings, and PPS settings to suit your specific requirements.
+## `ins_config`
