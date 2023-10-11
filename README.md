@@ -12,9 +12,10 @@ The Clap-B7 ROS2 driver is a software component designed to interface with a Glo
 
 -   **GNSS Data**: The driver reads raw data from the GNSS module, including satellite positions, timestamps, position, velocity, and other relevant information.
 
--   **INS Data**: It retrieves data from the Inertial Navigation System, such as linear and angular accelerations, roll, pitch, and yaw angles.
+-   **INS Data**: It retrieves data from the Inertial Navigation System, such as roll, pitch, and yaw angles.
 
--   **Fused Output**: The driver can fuse GNSS and INS data using sensor fusion techniques (e.g., Extended Kalman Filter) to provide an accurate and robust localization estimate.
+-   **6-DOF IMU Data**: The Clap-B7 has a built-in [ADIS16470](https://www.analog.com/media/en/technical-documentation/data-sheets/adis16470.pdf) 6-DOF IMU (Inertial Measurement Unit) that provides data from the accelerometers and gyroscopes.
+-   **Fused Output**: The Clap-B7 GNSS module can fuse GNSS and INS data using sensor fusion techniques (e.g., Extended Kalman Filter) to provide an accurate and robust localization estimate.
 
 -   **Configurable Parameters**: Various parameters can be configured to adapt the driver to different GNSS/INS modules and user requirements.
 
@@ -28,12 +29,12 @@ Before proceeding with the installation, ensure you have the following prerequis
 
 1.  ROS2 Humble: Make sure you have a working ROS2 Humble installation. If you don't have ROS2 Humble installed, you can follow the official installation instructions: [ROS2 Installation Guide](https://docs.ros.org/en/humble/Installation.html).
 
-2.  Autoware.universe: Make sure you have a working autoware.universe installation. If you don't have autoware.universe installed, you can follow the official github repo: [autoware.universe github](https://github.com/autowarefoundation/autoware.universe).
+2.  Autoware.universe: Make sure you have a working autoware.universe installation. If you don't have autoware.universe installed, you can follow the official installation: [Autoware.universe Installation](https://autowarefoundation.github.io/autoware-documentation/main/installation/autoware/source-installation/).
 2.  Build Tools: Ensure you have the necessary build tools and dependencies installed on your system.
 
 ### Install the Clap-B7 ROS2 Driver
 
-1.  Clone the Repository: If your Clap-B7 ROS2 driver is hosted on a version control system like Git, clone the repository into your autoware workspace's source directory:
+1.  Clone the Repository: Clone the repository into your autoware workspace's source directory:
 ```
     cd /path_to_your_autoware_workspace/src/sensor_component/external
     git clone https://github.com/Robeff-Technology/clap_b7_driver.git 
@@ -68,7 +69,7 @@ If you wish to customize the behavior of the GNSS/INS driver by adjusting its pa
 
 1.  Locate the Configuration File: The `.yaml` configuration file should be located in the package's `config` directory.
 
-2.  Customize Parameters: Edit the `.yaml` configuration file to modify the driver's behavior according to your requirements. You can adjust parameters such as communication settings, sensor fusion parameters, and output topics.
+2.  Customize Parameters: Edit the `.yaml` configuration file to modify the driver's behavior according to your requirements. You can adjust parameters such as communication settings, ins settings and output topics.
 
 3.  Launch the Driver with Custom Configuration: After making the necessary changes to the configuration file, launch the driver node with the updated configuration using the following command:
 
