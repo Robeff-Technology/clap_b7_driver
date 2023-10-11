@@ -13,7 +13,6 @@
       nav_sat_fix_topic: "clap/ros/gps_nav_sat_fix" # NavSatFix topic name
       twist_topic: "clap/ros/twist_with_covariance_stamped" # TwistWithCovarianceStamped topic name
       temperature_topic: "clap/ros/temperature" # Temperature topic name
-      autoware_orientation_topic: "clap/autoware_orientation"
 
     frame_config:
       gnss_frame: "GNSS_INS/gnss_ins_link" # GNSS frame name

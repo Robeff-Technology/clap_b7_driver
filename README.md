@@ -4,6 +4,8 @@
 
 The Clap-B7 ROS2 driver is a software component designed to interface with a Global Navigation Satellite System (GNSS) module combined with an Inertial Navigation System (INS). The driver enables ROS2-based applications to access and utilize the raw GNSS and INS data for localization, navigation, and other related tasks.
 
+#### Author: [Robeff Technology](https://www.robeff.com)
+#### Maintainer : [Robeff Technology](mailto:support@robeff.com)
 ## Features
 
 -   **ROS2 Compatibility**: The driver is fully compatible with the ROS2 (Robot Operating System 2) ecosystem, allowing seamless integration with other ROS2 nodes and packages.
@@ -25,6 +27,17 @@ To install the  Clap-B7 ROS2 driver, follow these steps:
 Before proceeding with the installation, ensure you have the following prerequisites:
 
 1.  ROS2 Humble: Make sure you have a working ROS2 Humble installation. If you don't have ROS2 Humble installed, you can follow the official installation instructions: [ROS2 Installation Guide](https://docs.ros.org/en/humble/Installation.html).
+
+    **Dependencies**: The driver includes additional dependencies:
+    -   [mavros_msgs](https://github.com/mavlink/mavros)
+    ```
+       sudo apt install ros-<distro>-mavros-msgs
+    ```
+    - [GeographicLib](https://geographiclib.sourceforge.io/html/)
+    ```
+       sudo apt install libgeographic-dev
+    ```
+        
 
 2.  Autoware.universe: Make sure you have a working autoware.universe installation. If you don't have autoware.universe installed, you can follow the official github repo: [autoware.universe github](https://github.com/autowarefoundation/autoware.universe).
 2.  Build Tools: Ensure you have the necessary build tools and dependencies installed on your system.
@@ -70,8 +83,9 @@ If you wish to customize the behavior of the GNSS/INS driver by adjusting its pa
 
 3.  Launch the Driver with Custom Configuration: After making the necessary changes to the configuration file, launch the driver node with the updated configuration using the following command:
 
-`ros2 launch clap_b7_driver clap_b7_driver.launch.py
-
+```
+ros2 launch clap_b7_driver clap_b7_driver.launch.py
+```
 
 
 ### Troubleshooting
@@ -134,3 +148,47 @@ The Clap-B7 ROS2 driver uses custom messages to represent specific data relevant
 ## Subscribed Topic
 ### `RTCM` [mavros_msgs::msg::RTCM](https://docs.ros.org/en/api/mavros_msgs/html/msg/RTCM.html)
 - RTCM data for RTK. For more information [ntrip_client.](https://github.com/Robeff-Technology/ntrip_client)
+
+# Clap - B7 Configuration
+If user wants to change message period, ins configuration and pps configuration, can change the configuration file. 
+The configuration file is located in the package's `config` directory. 
+The configuration file is in the `.yaml` format and named with `config_clap_b7.param.yaml`. The following sections describe the different parameters that can be configured in the file. 
+
+## `serial_config`
+
+- `port`: The name of the serial port where the device is connected.
+- `baudrate`: The baud rate for serial communication.
+- `clap_port`: Indicates which port the "clap-b7" is connected to (e.g., port 1, port 2, port 3).
+
+## `port1_config`, `port2_config`, `port3_config`
+
+These sections configure different ports, likely for various functionalities or devices. Common parameters include:
+
+- `baudrate`: The baud rate for the respective port.
+- `rawimu_period`: The period for rawimu messages.
+- `inspvax_period`: The period for inspvax messages.
+- `uniheading_period`: The period for uniheading messages.
+- `bestgnsspos_period`: The period for bestgnsspos messages.
+- `bestgnssvel_period`: The period for bestgnssvel messages.
+- `ecef_period`: The period for ecef messages.
+- `wheel_speed_period`: The period for wheel speed messages.
+- `gprmc`: Boolean value to indicate whether to send gprmc messages.
+
+## `ins_config`
+
+- `enable`: Indicates whether the Inertial Navigation System (INS) is enabled (true) or disabled (false).
+- `timeout`: Sets the duration for INS output when losing GNSS signals (in seconds).
+- `align_velocity_threshold`: Specifies the velocity threshold for INS alignment (in m/s).
+- `lever_arm_master` and `lever_arm_slave`: Lever arm settings for the master and slave antennas relative to the IMU.
+- `lever_arm_master_error` and `lever_arm_slave_error`: Lever arm error settings for the antennas.
+- `imu_position_offset`: Position offsets for the IMU.
+
+## `pps_config`
+
+- `enable`: Indicates whether the Pulse Per Second (PPS) signal is enabled (true) or disabled (false).
+- `mode`: Sets the mode for PPS output.
+- `polarity`: Specifies the polarity of the PPS signal.
+- `width`: Sets the pulse width of the PPS signal (in microseconds).
+- `period`: Sets the period of the PPS signal (in milliseconds).
+
+These configurations allow you to customize the communication settings and behavior of the connected device within the ROS2 environment. You can adjust parameters such as baud rates, message publication periods, INS settings, and PPS settings to suit your specific requirements.

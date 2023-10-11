@@ -22,7 +22,6 @@ namespace clap_b7{
         node.get_parameter_or<std::string>("topic_config.nav_sat_fix_topic",nav_sat_fix_topic_,"clap/ros/nav_sat_fix");
         node.get_parameter_or<std::string>("topic_config.twist_topic",twist_topic_,"clap/ros/twist");
         node.get_parameter_or<std::string>("topic_config.temperature_topic",temperature_topic_,"clap/ros/temperature");
-        node.get_parameter_or<std::string>("topic_config.autoware_orientation_topic",autoware_orientation_topic_,"clap/autoware_orientation");
         node.get_parameter_or<std::string>("frame_config.gnss_frame",gnss_frame_,"GNSS_INS/gnss_ins_link");
         node.get_parameter_or<double>("true_heading_config.true_heading_offset",true_heading_offset_,0.0);
         node.get_parameter_or<bool>("odometry_config.use_odometry",use_odometry_,false);
@@ -47,7 +46,6 @@ namespace clap_b7{
         RCLCPP_INFO(node.get_logger(), "nav_sat_fix_topic: %s", nav_sat_fix_topic_.c_str());
         RCLCPP_INFO(node.get_logger(), "twist_topic: %s", twist_topic_.c_str());
         RCLCPP_INFO(node.get_logger(), "temperature_topic: %s", temperature_topic_.c_str());
-        RCLCPP_INFO(node.get_logger(), "autoware_orientation_topic: %s", autoware_orientation_topic_.c_str());
         RCLCPP_INFO(node.get_logger(), "gnss_frame: %s", gnss_frame_.c_str());
         RCLCPP_INFO(node.get_logger(), "true_heading_offset: %f", true_heading_offset_);
         RCLCPP_INFO(node.get_logger(), "use_odometry: %d", use_odometry_);
@@ -109,9 +107,6 @@ namespace clap_b7{
         return temperature_topic_;
     }
 
-    std::string ConfigParams::get_autoware_orientation_topic(){
-        return autoware_orientation_topic_;
-    }
 
     double ConfigParams::get_true_heading_offset() {
         return true_heading_offset_;
