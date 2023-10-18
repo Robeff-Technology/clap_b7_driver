@@ -188,7 +188,7 @@ namespace clap_b7{
         std::vector<std::string> lever_arm_slave;
         std::vector<std::string> lever_arm_master_error;
         std::vector<std::string> lever_arm_slave_error;
-
+        std::vector<std::string> imu_pos_offset;
         lever_arm_master = this->declare_parameter<std::vector<std::string>>("ins_config.lever_arm_master",lever_arm_master);
         lever_arm_master_error = this->declare_parameter<std::vector<std::string>>("ins_config.lever_arm_master_error", lever_arm_master_error);
 
@@ -203,6 +203,11 @@ namespace clap_b7{
         boost::split(lever_arm_slave, lever_arm_slave[0], boost::is_any_of(" "));
         boost::split(lever_arm_slave_error, lever_arm_slave_error[0], boost::is_any_of(" "));
         command = "config imutoant2 offset " + lever_arm_slave[0] + " " + lever_arm_slave[1] + " " + lever_arm_slave[2] + " " + lever_arm_slave_error[0] + " " + lever_arm_slave_error[1] + " " + lever_arm_slave_error[2] + "\r\n";
+        commands_.push_back(command);
+
+        imu_pos_offset = this->declare_parameter<std::vector<std::string>>("ins_config.imu_position_offset", imu_pos_offset);
+        boost::split(imu_pos_offset, imu_pos_offset[0], boost::is_any_of(" "));
+        command = "config inssol offset " + imu_pos_offset[0] + " " + imu_pos_offset[1] + " " + imu_pos_offset[2] + "\r\n";
         commands_.push_back(command);
 
         ///////////////////*********************** COM1 ***********************//////////////////////
