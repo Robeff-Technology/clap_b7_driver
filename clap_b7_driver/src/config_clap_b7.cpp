@@ -210,6 +210,9 @@ namespace clap_b7{
         command = "config inssol offset " + imu_pos_offset[0] + " " + imu_pos_offset[1] + " " + imu_pos_offset[2] + "\r\n";
         commands_.push_back(command);
 
+        command = "config ododirvcc high\r\n";
+        commands_.push_back(command);
+
         ///////////////////*********************** COM1 ***********************//////////////////////
 
         send_gprmc = this->declare_parameter<bool>("port1_config.gprmc", false);
