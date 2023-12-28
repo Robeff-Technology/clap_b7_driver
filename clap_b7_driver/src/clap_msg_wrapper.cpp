@@ -501,9 +501,9 @@ namespace clap_b7{
         imu_msg.linear_acceleration.y = -1.0 * raw_acc_to_m_s2(imu.y_accel_output);
         imu_msg.linear_acceleration.z = raw_acc_to_m_s2(imu.z_accel_output);
 
-        imu_msg.orientation_covariance[0] = 0.001;
-        imu_msg.orientation_covariance[4] = 0.001;
-        imu_msg.orientation_covariance[8] = 0.001;
+        imu_msg.orientation_covariance[0] = 1000.0;
+        imu_msg.orientation_covariance[4] = 1000.0;
+        imu_msg.orientation_covariance[8] = 1000.0;
 
         /*
          * angular velocity and linear acceleration covariance is not provided by clap b7
