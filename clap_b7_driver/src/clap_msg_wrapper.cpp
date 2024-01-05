@@ -556,4 +556,18 @@ namespace clap_b7{
 
         return orientation_msg;
     }
+
+    diagnostic_msgs::msg::DiagnosticStatus ClapMsgWrapper::create_diagnostic_msg(){
+        diagnostic_msgs::msg::DiagnosticStatus diag_status_msg;
+        diag_status_msg.name = "clap_time_source";
+        diag_status_msg.hardware_id = "CLAPB7";
+        diag_status_msg.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+        if(is_delay_high(clap_timestamp)){
+            diag_status_msg.message = "GPS time delay is high using ROS time";
+        }
+        else{
+            diag_status_msg.message = "GPS time delay is low using GPS time";
+        }
+        return diag_status_msg;
+    }
 } // namespace clap_b7

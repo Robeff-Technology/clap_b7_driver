@@ -186,6 +186,9 @@ namespace clap_b7{
                 publishers_.publish_twist_ecef(twist_msg);
                 break;
             }
+            default:
+                publishers_.publish_diagnostics(msg_wrapper_.create_diagnostic_msg());
+                break;
         }
     }
     void ClapB7Driver::serial_read_callback(const char *data, size_t len) {

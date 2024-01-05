@@ -19,7 +19,7 @@ namespace clap_b7 {
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
         raw_imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>("/raw/imu", max_msg_size_);
         gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
-
+        pub_diagnostics_ = ref_ros_node.create_publisher<diagnostic_msgs::msg::DiagnosticStatus>("/diagnostics", max_msg_size_);
         if(params_.get_use_odometry()){
             gnss_odom_pub_ = ref_ros_node.create_publisher<nav_msgs::msg::Odometry>(params_.get_odometry_topic(), max_msg_size_);
             tf_broadcaster_odom_ = std::make_shared<tf2_ros::TransformBroadcaster>(ref_ros_node);
@@ -139,6 +139,12 @@ namespace clap_b7 {
     void Publishers:: publish_wheel_odom(const clap_b7_driver::msg::ClapWheelOdom &wheel_odom_msg){
         if(pub_wheel_odom_) {
             pub_wheel_odom_->publish(wheel_odom_msg);
+        }
+    }
+
+    void Publishers::publish_diagnostics(const diagnostic_msgs::msg::DiagnosticStatus &diagnostics_msg){
+        if(pub_diagnostics_) {
+            pub_diagnostics_->publish(diagnostics_msg);
         }
     }
 } // namespace clap_b7
