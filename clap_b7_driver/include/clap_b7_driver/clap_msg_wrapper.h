@@ -19,6 +19,8 @@
 
 #include <nav_msgs/msg/odometry.hpp>
 
+#include <diagnostic_msgs/msg/diagnostic_status.hpp>
+
 #include <clap_b7_driver/msg/clap_heading.hpp>
 #include <clap_b7_driver/msg/clap_imu.hpp>
 #include <clap_b7_driver/msg/clap_gps_pos.hpp>
@@ -94,6 +96,10 @@ namespace clap_b7{
         clap_b7_driver::msg::ClapWheelOdom create_wheel_odom_msg(const TimeDWheelData &wheel_odom) const;
 
         bool is_ins_initialized(const InsPvax &ins);
+
+        static bool is_delay_high(int64_t clap_timestamp);
+
+        diagnostic_msgs::msg::DiagnosticStatus create_diagnostic_msg();
     };
 
 } // namespace clap_b7

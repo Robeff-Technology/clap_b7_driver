@@ -21,6 +21,7 @@
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <sensor_msgs/msg/temperature.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
 #include <autoware_sensing_msgs/msg/gnss_ins_orientation_stamped.hpp>
 #include <tf2_ros/transform_broadcaster.h>
@@ -47,6 +48,8 @@ namespace clap_b7{
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr gnss_odom_pub_;
         std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_odom_;
         std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
+        rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticStatus>::SharedPtr pub_diagnostics_;
+
 
         /*
          * Clap msgs Publishers
@@ -91,6 +94,8 @@ namespace clap_b7{
         void publish_raw_imu(const sensor_msgs::msg::Imu &imu_msg);
 
         void publish_wheel_odom(const clap_b7_driver::msg::ClapWheelOdom &wheel_odom_msg);
+
+        void publish_diagnostics(const diagnostic_msgs::msg::DiagnosticStatus &diagnostic_msg);
     };
 
 } // namespace clap_b7
