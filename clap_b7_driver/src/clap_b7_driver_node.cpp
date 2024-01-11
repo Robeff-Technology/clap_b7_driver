@@ -5,7 +5,7 @@
 int main(int argc, char ** argv)
 {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<clap_b7::ClapB7Driver>();
+    auto node = std::make_shared<clap_b7::ClapB7Driver>(rclcpp::NodeOptions());
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

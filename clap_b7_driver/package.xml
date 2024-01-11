@@ -23,6 +23,7 @@
   <depend>mavros_msgs </depend>
   <depend>autoware_sensing_msgs </depend>
   <depend>eigen </depend>
+  <depend>diagnostic_updater </depend>
 
 
 

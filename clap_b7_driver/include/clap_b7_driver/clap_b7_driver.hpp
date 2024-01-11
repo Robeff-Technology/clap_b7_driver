@@ -13,6 +13,7 @@
 #include <clap_b7_driver/ll_to_utm_transform.h>
 
 #include <rclcpp/rclcpp.hpp>
+#include <diagnostic_updater/diagnostic_updater.hpp>
 
 #include <mavros_msgs/msg/rtcm.hpp>
 
@@ -23,7 +24,7 @@ namespace clap_b7
 {
     class ClapB7Driver : public rclcpp::Node {
     public:
-        ClapB7Driver();
+        ClapB7Driver(const rclcpp::NodeOptions &options);
         ~ClapB7Driver() override {
             serial_.close();
         }
@@ -62,6 +63,10 @@ namespace clap_b7
         void load_parameters();
 
         void rtcm_callback(const mavros_msgs::msg::RTCM::SharedPtr msg);
+
+        // diagnostics
+        diagnostic_updater::Updater updater_;
+        void check_time_sync(diagnostic_updater::DiagnosticStatusWrapper &stat);
     };
 } // namespace clap_b7
 
