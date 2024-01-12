@@ -94,6 +94,8 @@ namespace clap_b7{
         clap_b7_driver::msg::ClapWheelOdom create_wheel_odom_msg(const TimeDWheelData &wheel_odom) const;
 
         bool is_ins_initialized(const InsPvax &ins);
+
+        static bool is_delay_high(int64_t clap_timestamp);
     };
 
 } // namespace clap_b7

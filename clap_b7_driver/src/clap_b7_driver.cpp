@@ -10,12 +10,15 @@
 //deneme
 
 namespace clap_b7{
-    ClapB7Driver::ClapB7Driver() : Node("clap_b7_driver")
+    ClapB7Driver::ClapB7Driver(const rclcpp::NodeOptions &options) : Node("clap_b7_driver",options), updater_(this)
     {
         RCLCPP_INFO(this->get_logger(), "ClapB7Driver is starting");
         //
         // Get the ROS private nodeHandle, where the parameters are loaded from the launch file.
         //
+        updater_.setHardwareID("ClapB7");
+        updater_.add("ClapB7TimeSync", this, &ClapB7Driver::check_time_sync);
+
         load_parameters();
         if(params_.get_pub_custom_msgs()){
             publishers_.init_custom_msgs_publisher(*this);
@@ -97,8 +100,9 @@ namespace clap_b7{
                 publishers_.publish_temperature(temp_msg);
 
                 auto imu_msg = msg_wrapper_.create_raw_imu_msg(raw_imu_, params_.get_gnss_frame());
-                publishers_.publish_raw_imu(imu_msg);
-
+                if(!msg_wrapper_.is_ins_active(ins_pvax_)){
+                    publishers_.publish_imu(imu_msg);
+                }
                 auto twist_msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_twist(twist_msg);
                 break;
@@ -164,7 +168,7 @@ namespace clap_b7{
                     }
                 }
 
-                if(msg_wrapper_.is_ins_initialized(ins_pvax_)){
+                if(msg_wrapper_.is_ins_active(ins_pvax_)){
                     auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
                     publishers_.publish_imu(msg);
 
@@ -194,5 +198,23 @@ namespace clap_b7{
     void ClapB7Driver::rtcm_callback(const mavros_msgs::msg::RTCM::SharedPtr msg) {
         const char *start_ptr = reinterpret_cast<const char*>(msg->data.data());
         serial_.write(start_ptr, msg->data.size());
+    }
+    void ClapB7Driver::check_time_sync(diagnostic_updater::DiagnosticStatusWrapper &stat) {
+        diagnostic_msgs::msg::KeyValue key_value;
+        if(msg_wrapper_.is_delay_high(parser_.get_unix_time_ns())){
+            stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "GPS Time is not reliable ROS Time is used");
+        }
+        else{
+            stat.summary(diagnostic_msgs::msg::DiagnosticStatus::OK, "GPS Time is reliable");
+        }
+        key_value.key = "clap_timestamp";
+        key_value.value = std::to_string(parser_.get_unix_time_ns() * 1e-9);
+        stat.values.push_back(key_value);
+        key_value.key = "ros_time";
+        key_value.value=std::to_string(rclcpp::Clock().now().seconds());
+        stat.values.push_back(key_value);
+        key_value.key = "delay";
+        key_value.value = std::to_string((rclcpp::Clock().now().nanoseconds() - parser_.get_unix_time_ns()) * 1e-6) + "ms";
+        stat.values.push_back(key_value);
     }
 } // namespace clap_b7

@@ -20,6 +20,10 @@ namespace clap_b7{
     void ClapMsgWrapper::set_system_time(int64_t timestamp) {
         clap_timestamp = timestamp;
     }
+    
+    bool ClapMsgWrapper::is_delay_high(int64_t clap_timestamp){
+        return ((rclcpp::Clock().now().nanoseconds() - clap_timestamp) > 100000000 || (rclcpp::Clock().now().nanoseconds() - clap_timestamp) < 0);
+    }
 
     bool ClapMsgWrapper::is_ins_active(const clap_b7::InsPvax& ins){
         return ins.ins_status > 1;
@@ -62,7 +66,10 @@ namespace clap_b7{
         if(use_ros_time_) {
             header.stamp = rclcpp::Clock().now();
         }
-        else {
+        else if(is_delay_high(clap_timestamp)) {
+            header.stamp = rclcpp::Clock().now();
+        }
+        else{
             header.stamp = rclcpp::Time(clap_timestamp);
         }
         header.frame_id = std::move(frame_id);
@@ -501,9 +508,9 @@ namespace clap_b7{
         imu_msg.linear_acceleration.y = -1.0 * raw_acc_to_m_s2(imu.y_accel_output);
         imu_msg.linear_acceleration.z = raw_acc_to_m_s2(imu.z_accel_output);
 
-        imu_msg.orientation_covariance[0] = 0.001;
-        imu_msg.orientation_covariance[4] = 0.001;
-        imu_msg.orientation_covariance[8] = 0.001;
+        imu_msg.orientation_covariance[0] = 1000.0;
+        imu_msg.orientation_covariance[4] = 1000.0;
+        imu_msg.orientation_covariance[8] = 1000.0;
 
         /*
          * angular velocity and linear acceleration covariance is not provided by clap b7

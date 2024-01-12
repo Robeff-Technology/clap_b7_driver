@@ -17,7 +17,7 @@ namespace clap_b7 {
         nav_sat_fix_raw_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>("raw/nav_sat_fix", max_msg_size_);
         nav_sat_fix_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::NavSatFix>(params_.get_nav_sat_fix_topic(), max_msg_size_);
         imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>(params_.get_imu_topic(), max_msg_size_);
-        raw_imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>("raw/imu", max_msg_size_);
+        raw_imu_pub_ = ref_ros_node.create_publisher<sensor_msgs::msg::Imu>("/raw/imu", max_msg_size_);
         gnss_ins_orientation_pub_ = ref_ros_node.create_publisher<autoware_sensing_msgs::msg::GnssInsOrientationStamped>(params_.get_autoware_orientation_topic(), max_msg_size_);
 
         if(params_.get_use_odometry()){
