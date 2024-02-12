@@ -16,8 +16,10 @@ namespace clap_b7{
         //
         // Get the ROS private nodeHandle, where the parameters are loaded from the launch file.
         //
+        RCLCPP_INFO(this->get_logger(), "diagnostics initializing");
         updater_.setHardwareID("ClapB7");
         updater_.add("ClapB7TimeSync", this, &ClapB7Driver::check_time_sync);
+        RCLCPP_INFO(this->get_logger(), "diagnostics initialized");
 
         load_parameters();
         if(params_.get_pub_custom_msgs()){
@@ -58,10 +60,12 @@ namespace clap_b7{
     }
 
     void ClapB7Driver::load_parameters(){
+        RCLCPP_INFO(this->get_logger(), "parameters are loading");
         rclcpp::NodeOptions node_opt;
         node_opt.automatically_declare_parameters_from_overrides(true);
         rclcpp::Node n_private("npv", "", node_opt);
         params_.load_parameters(n_private);
+        RCLCPP_INFO(this->get_logger(), "parameters are loaded");
     }
 
     void ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
@@ -81,6 +85,7 @@ namespace clap_b7{
     }
 
     void ClapB7Driver::clap_read_callback(const uint8_t *data, uint16_t id) {
+        RCLCPP_INFO(this->get_logger(), "clap_callback started");
         msg_wrapper_.set_system_time(parser_.get_unix_time_ns());
 
         switch(static_cast<clap_b7::BinaryParser::MessageId>(id)) {
@@ -88,6 +93,7 @@ namespace clap_b7{
                 std::memcpy(&wheel_data_, data, sizeof(TimeDWheelData));
                 auto msg = msg_wrapper_.create_wheel_odom_msg(wheel_data_);
                 publishers_.publish_wheel_odom(msg);
+                RCLCPP_INFO(this->get_logger(), "wheel_odom published");
                 break;
             }
             case clap_b7::BinaryParser::MessageId::kRAWIMU: {
@@ -105,6 +111,7 @@ namespace clap_b7{
                 }
                 auto twist_msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_twist(twist_msg);
+                RCLCPP_INFO(this->get_logger(), "raw_imu published");
                 break;
             }
 
@@ -113,6 +120,7 @@ namespace clap_b7{
                 heading_.heading = static_cast<float>(ClapMsgWrapper::add_heading_offset(heading_.heading, params_.get_true_heading_offset()));
                 auto msg = msg_wrapper_.create_gps_heading_msg(heading_, params_.get_gnss_frame());
                 publishers_.publish_heading(msg);
+                RCLCPP_INFO(this->get_logger(), "heading published");
                 break;
             }
 
@@ -125,6 +133,7 @@ namespace clap_b7{
                 }
                 publishers_.publish_raw_navsatfix(sensor_msg);
                 publishers_.publish_gps_pos(custom_msg);
+                RCLCPP_INFO(this->get_logger(), "navsatfix and gps_pos published");
                 break;
             }
 
@@ -133,6 +142,7 @@ namespace clap_b7{
 
                 auto custom_msg = msg_wrapper_.create_gps_vel_msg(gnss_vel_, params_.get_gnss_frame());
                 publishers_.publish_gps_vel(custom_msg);
+                RCLCPP_INFO(this->get_logger(), "gpsvel published");
                 break;
             }
 
@@ -162,22 +172,27 @@ namespace clap_b7{
                         }
                         auto odom_msg = msg_wrapper_.create_odom_msg(ins_pvax_, raw_imu_, x, y, z, params_.get_odometry_frame(), "base_link");
                         publishers_.publish_gnss_odom(odom_msg);
+                        RCLCPP_INFO(this->get_logger(), "odom published");
 
                         auto pos_msg = msg_wrapper_.create_transform(odom_msg.pose.pose, odom_msg.header.frame_id, "base_link");
                         publishers_.broadcast_transforms(pos_msg);
+                        RCLCPP_INFO(this->get_logger(), "transform published");
                     }
                 }
 
                 if(msg_wrapper_.is_ins_active(ins_pvax_)){
                     auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
                     publishers_.publish_imu(msg);
+                    RCLCPP_INFO(this->get_logger(), "imu published");
 
                     auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_, params_.get_gnss_frame());
                     publishers_.publish_autoware_orientation(autoware_msg);
+                    RCLCPP_INFO(this->get_logger(), "aw orientation published");
                 }
 
                 auto custom_msg = msg_wrapper_.create_ins_msg(ins_pvax_, params_.get_gnss_frame());
                 publishers_.publish_ins(custom_msg);
+                RCLCPP_INFO(this->get_logger(), "ins published");
                 break;
             }
 
@@ -185,21 +200,29 @@ namespace clap_b7{
                 std::memcpy(&ecef_, data, sizeof(ECEF));
                 auto msg = msg_wrapper_.create_ecef_msg(ecef_);
                 publishers_.publish_ecef(msg);
+                RCLCPP_INFO(this->get_logger(), "ecef published");
                 auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_twist_ecef(twist_msg);
+                RCLCPP_INFO(this->get_logger(), "twist published");
                 break;
             }
         }
     }
     void ClapB7Driver::serial_read_callback(const char *data, size_t len) {
+        RCLCPP_INFO(this->get_logger(), "serial_callback started");
         parser_.received_new_data(reinterpret_cast<const uint8_t*>(data), static_cast<uint16_t>(len));
+        RCLCPP_INFO(this->get_logger(), "serial_callback executed");
     }
 
     void ClapB7Driver::rtcm_callback(const mavros_msgs::msg::RTCM::SharedPtr msg) {
+        RCLCPP_INFO(this->get_logger(), "rtcm_callback started");
         const char *start_ptr = reinterpret_cast<const char*>(msg->data.data());
         serial_.write(start_ptr, msg->data.size());
+        RCLCPP_INFO(this->get_logger(), "rtcm_callback executed");
     }
     void ClapB7Driver::check_time_sync(diagnostic_updater::DiagnosticStatusWrapper &stat) {
+        RCLCPP_INFO(this->get_logger(), "diagnostics started");
+
         diagnostic_msgs::msg::KeyValue key_value;
         if(msg_wrapper_.is_delay_high(parser_.get_unix_time_ns())){
             stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "GPS Time is not reliable ROS Time is used");
@@ -216,5 +239,6 @@ namespace clap_b7{
         key_value.key = "delay";
         key_value.value = std::to_string((rclcpp::Clock().now().nanoseconds() - parser_.get_unix_time_ns()) * 1e-6) + "ms";
         stat.values.push_back(key_value);
+        RCLCPP_INFO(this->get_logger(), "diagnostics published");
     }
 } // namespace clap_b7

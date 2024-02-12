@@ -18,7 +18,9 @@ constexpr double gyro_scale_factor = 0.000001006;
 namespace clap_b7{
     ClapMsgWrapper::~ClapMsgWrapper() = default;
     void ClapMsgWrapper::set_system_time(int64_t timestamp) {
+        std::cout<<"set system time started"<<std::endl;
         clap_timestamp = timestamp;
+        std::cout<<"set system time executed"<<std::endl;
     }
     
     bool ClapMsgWrapper::is_delay_high(int64_t clap_timestamp){
@@ -62,6 +64,7 @@ namespace clap_b7{
     }
 
     std_msgs::msg::Header ClapMsgWrapper::create_header(std::string frame_id) const {
+        std::cout<<"create header started"<<std::endl;
         std_msgs::msg::Header header;
         if(use_ros_time_) {
             header.stamp = rclcpp::Clock().now();
@@ -73,10 +76,12 @@ namespace clap_b7{
             header.stamp = rclcpp::Time(clap_timestamp);
         }
         header.frame_id = std::move(frame_id);
+        std::cout<<"header created"<<std::endl;
         return header;
     }
 
     sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::InsPvax& ins, std::string frame_id, int alt_mode) const {
+        std::cout<<"create navsatfix from ins started"<<std::endl;
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
 
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
@@ -125,10 +130,12 @@ namespace clap_b7{
 
 
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
+        std::cout<<"navsatfix from ins created"<<std::endl;
         return nav_sat_fix_msg;
     }
 
     sensor_msgs::msg::NavSatFix ClapMsgWrapper::create_nav_sat_fix_msg(const clap_b7::BestGnssPos &gps_pos, std::string frame_id, int alt_mode) const{
+        std::cout<<"create navsatfix from gpspos started"<<std::endl;
         sensor_msgs::msg::NavSatFix nav_sat_fix_msg;
         nav_sat_fix_msg.header = create_header(std::move(frame_id));
 
@@ -174,10 +181,12 @@ namespace clap_b7{
         nav_sat_fix_msg.position_covariance[8] = covariance_enu(2, 2);
 
         nav_sat_fix_msg.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
+        std::cout<<"navsatfix from gpspos created"<<std::endl;
         return nav_sat_fix_msg;
     }
 
     sensor_msgs::msg::Imu ClapMsgWrapper::create_sensor_imu_msg(const clap_b7::RawImu& raw_imu, const clap_b7::InsPvax& ins, std::string frame_id) const {
+        std::cout<<"create sensorimu started"<<std::endl;
         sensor_msgs::msg::Imu imu_msg;
         imu_msg.header = create_header(std::move(frame_id));
         tf2::Quaternion q;
@@ -210,6 +219,7 @@ namespace clap_b7{
             imu_msg.angular_velocity_covariance[i] = 0.00;
             imu_msg.linear_acceleration_covariance[i] = 0.00;
         }
+        std::cout<<"sensorimu created"<<std::endl;
 
         return imu_msg;
     }
@@ -219,6 +229,7 @@ namespace clap_b7{
     }
 
    clap_b7_driver::msg::ClapGpsPos ClapMsgWrapper::create_gps_pos_msg(const clap_b7::BestGnssPos& gnss_pos, std::string frame_id) const{
+        std::cout<<"create gpspos started"<<std::endl;
         clap_b7_driver::msg::ClapGpsPos gps_pos_msg;
         gps_pos_msg.header = create_header(std::move(frame_id));
         gps_pos_msg.latitude = gnss_pos.latitude;
@@ -236,10 +247,12 @@ namespace clap_b7{
 
         gps_pos_msg.pos_type = gnss_pos.pos_type;
         gps_pos_msg.sol_status = gnss_pos.sol_status;
+        std::cout<<"gpspos created"<<std::endl;
         return gps_pos_msg;
     }
 
     clap_b7_driver::msg::ClapGpsVel ClapMsgWrapper::create_gps_vel_msg(const clap_b7::BestGnssVel& gnss_vel, std::string frame_id)const{
+        std::cout<<"create gpsvel started"<<std::endl;
         clap_b7_driver::msg::ClapGpsVel gps_vel_msg;
         gps_vel_msg.header = create_header(std::move(frame_id));
 
@@ -252,10 +265,12 @@ namespace clap_b7{
         gps_vel_msg.trk_gnd = gnss_vel.track_angle;
         gps_vel_msg.vert_spd = gnss_vel.vertical_speed;
 
+        std::cout<<"gpsvel created"<<std::endl;
         return gps_vel_msg;
     }
 
     clap_b7_driver::msg::ClapHeading ClapMsgWrapper::create_gps_heading_msg(const clap_b7::UniHeading& uniheading, std::string frame_id) const{
+        std::cout<<"create heading started"<<std::endl;
         clap_b7_driver::msg::ClapHeading heading;
         heading.header = create_header(std::move(frame_id));
 
@@ -265,10 +280,12 @@ namespace clap_b7{
         heading.pitch = uniheading.pitch;
         heading.std_dev_pitch = uniheading.std_dev_pitch;
         heading.baseline_len = uniheading.baseline_length;
+        std::cout<<"heading created"<<std::endl;
         return heading;
     }
 
     clap_b7_driver::msg::ClapImu ClapMsgWrapper::create_imu_msg(const clap_b7::RawImu& raw_imu, std::string frame_id) const{
+        std::cout<<"create imu started"<<std::endl;
         clap_b7_driver::msg::ClapImu imu_msg;
         imu_msg.header = create_header(std::move(frame_id));
 
@@ -282,9 +299,11 @@ namespace clap_b7{
         imu_msg.y_gyro_output = -1.0 * degree2radian(raw_gyro_to_deg_s(raw_imu.y_gyro_output));
         imu_msg.z_gyro_output = degree2radian(raw_gyro_to_deg_s(raw_imu.z_gyro_output));
 
+        std::cout<<"imu created"<<std::endl;
         return imu_msg;
     }
     clap_b7_driver::msg::ClapIns ClapMsgWrapper::create_ins_msg(const clap_b7::InsPvax& ins, std::string frame_id)const{
+        std::cout<<"create ins started"<<std::endl;
         clap_b7_driver::msg::ClapIns ins_msg;
         ins_msg.header = create_header(std::move(frame_id));
         ins_msg.ins_status = ins.ins_status;
@@ -311,26 +330,31 @@ namespace clap_b7{
         ins_msg.extended_solution_stat = ins.extended_solution_stat;
         ins_msg.time_since_update = ins.time_since_update;
 
+        std::cout<<"ins created"<<std::endl;
         return ins_msg;
     }
 
     sensor_msgs::msg::Temperature ClapMsgWrapper::create_temperature_msg(const RawImu &raw_imu, std::string frame_id) const {
+        std::cout<<"create temperature started"<<std::endl;
         sensor_msgs::msg::Temperature temperature_msg;
         temperature_msg.header = create_header(std::move(frame_id));
         temperature_msg.temperature = calc_imu_temperature(raw_imu);
+        std::cout<<"temperature created"<<std::endl;
         return temperature_msg;
     }
 
     double ClapMsgWrapper :: add_heading_offset(double heading, double offset) {
+        std::cout<<"add heading offset started"<<std::endl;
         double heading_offset = heading + offset;
         if (heading_offset < 0.0) {
             heading_offset += 360.0;
         }
+        std::cout<<"heading offset added"<<std::endl;
         return heading_offset;
     }
 
     nav_msgs::msg::Odometry ClapMsgWrapper::create_odom_msg(const InsPvax& ins, const RawImu& imu, double x, double y, double z, std::string frame_id, std::string child_frame_id) const {
-
+        std::cout<<"create odom started"<<std::endl;
         nav_msgs::msg::Odometry odom_msg;
 
         odom_msg.header = create_header(std::move(frame_id));
@@ -369,11 +393,12 @@ namespace clap_b7{
         odom_msg.twist.covariance[3*6 + 3] = 0.01;
         odom_msg.twist.covariance[4*6 + 4] = 0.01;
         odom_msg.twist.covariance[5*6 + 5] = 0.01;
-
+        std::cout<<"odom created"<<std::endl;
         return odom_msg;
     }
 
     geometry_msgs::msg::TransformStamped ClapMsgWrapper::create_transform(const geometry_msgs::msg::Pose &ref_pose, std::string frame_id, std::string child_frame_id) const{
+        std::cout<<"create tf started"<<std::endl;
         geometry_msgs::msg::TransformStamped transform;
         transform.header = create_header(std::move(frame_id));
         transform.child_frame_id = std::move(child_frame_id);
@@ -385,10 +410,12 @@ namespace clap_b7{
         transform.transform.rotation.y = ref_pose.orientation.y;
         transform.transform.rotation.z = ref_pose.orientation.z;
         transform.transform.rotation.w = ref_pose.orientation.w;
+        std::cout<<"tf created"<<std::endl;
         return transform;
     }
 
     clap_b7_driver::msg::ClapECEF ClapMsgWrapper::create_ecef_msg(const ECEF & ecef) const{
+        std::cout<<"create ecef started"<<std::endl;
         clap_b7_driver::msg::ClapECEF ecef_msg;
         ecef_msg.pos_x = ecef.pos_x;
         ecef_msg.pos_y = ecef.pos_y;
@@ -408,10 +435,12 @@ namespace clap_b7{
         ecef_msg.std_vel_x = ecef.std_vel_x;
         ecef_msg.std_vel_y = ecef.std_vel_y;
         ecef_msg.std_vel_z = ecef.std_vel_z;
+        std::cout<<"ecef created"<<std::endl;
         return ecef_msg;
     }
 
     geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const clap_b7::BestGnssVel& gnss_vel, float heading, const clap_b7::RawImu& imu, std::string frame_id) const{
+        std::cout<<"create twist from gpsvel started"<<std::endl;
         geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
         twist_msg.header = create_header(std::move(frame_id));
         if(cos(degree2radian(heading - gnss_vel.track_angle)) < 0.0) {
@@ -434,10 +463,12 @@ namespace clap_b7{
         twist_msg.twist.covariance[21] = 10000.0;
         twist_msg.twist.covariance[28] = 10000.0;
         twist_msg.twist.covariance[35] = 0.02;
+        std::cout<<"twist from gpsvel created"<<std::endl;
         return twist_msg;
     }
 
     geometry_msgs::msg::TwistWithCovarianceStamped ClapMsgWrapper::create_twist_msg(const ECEF & ecef, const RawImu& imu, std::string frame_id) const{
+        std::cout<<"create twist from ecef started"<<std::endl;
         geometry_msgs::msg::TwistWithCovarianceStamped twist_msg;
         twist_msg.header = create_header(std::move(frame_id));
 
@@ -455,6 +486,7 @@ namespace clap_b7{
         twist_msg.twist.covariance[21] = 0.0;
         twist_msg.twist.covariance[28] = 0.0;
         twist_msg.twist.covariance[35] = 0.0;
+        std::cout<<"twist from ecef created"<<std::endl;
         return twist_msg;
     }
 
@@ -469,6 +501,7 @@ namespace clap_b7{
         return scaled_angle;
     }
     sensor_msgs::msg::Imu ClapMsgWrapper::create_raw_imu_msg(const RawImu &imu, std::string frame_id) const{
+        std::cout<<"create rawimu started"<<std::endl;
         sensor_msgs::msg::Imu imu_msg;
         imu_msg.header = create_header(std::move(frame_id));
         tf2::Quaternion q;
@@ -519,9 +552,11 @@ namespace clap_b7{
             imu_msg.angular_velocity_covariance[i] = 0.001;
             imu_msg.linear_acceleration_covariance[i] = 0.001;
         }
+        std::cout<<"rawimu created"<<std::endl;
         return imu_msg;
     }
     clap_b7_driver::msg::ClapWheelOdom ClapMsgWrapper::create_wheel_odom_msg(const TimeDWheelData &wheel_odom) const{
+        std::cout<<"create wheelodom started"<<std::endl;
         static int32_t prev_ticks = 0;
         clap_b7_driver::msg::ClapWheelOdom wheel_odom_msg;
         wheel_odom_msg.ticks_per_rev = wheel_odom.cumulative_ticks - prev_ticks;
@@ -530,10 +565,12 @@ namespace clap_b7{
         wheel_odom_msg.direction = wheel_odom.direction;
         wheel_odom_msg.cumulative_ticks = wheel_odom.cumulative_ticks;
         prev_ticks = wheel_odom.cumulative_ticks;
+        std::cout<<"wheelodom created"<<std::endl;
         return wheel_odom_msg;
     }
 
     autoware_sensing_msgs::msg::GnssInsOrientationStamped ClapMsgWrapper::create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const {
+        std::cout<<"create aw orientation started"<<std::endl;
         autoware_sensing_msgs::msg::GnssInsOrientationStamped orientation_msg;
         orientation_msg.header = create_header(std::move(frame_id));
         tf2::Quaternion q;
@@ -554,6 +591,7 @@ namespace clap_b7{
         orientation_msg.orientation.rmse_rotation_y = ins.std_dev_roll * ins.std_dev_roll;
         orientation_msg.orientation.rmse_rotation_z = heading.std_dev_heading * heading.std_dev_heading;
 
+        std::cout<<"aw orientation created"<<std::endl;
         return orientation_msg;
     }
 } // namespace clap_b7
