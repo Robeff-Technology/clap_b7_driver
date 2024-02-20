@@ -93,17 +93,17 @@ namespace clap_b7{
             case clap_b7::BinaryParser::MessageId::kRAWIMU: {
                 std::memcpy(&raw_imu_, data, sizeof(RawImu));
 
-                auto msg = msg_wrapper_.create_imu_msg(raw_imu_, params_.get_gnss_frame());
+                auto msg = msg_wrapper_.create_imu_msg(raw_imu_, params_.get_imu_frame());
                 publishers_.publish_adis16470_imu(msg);
 
                 auto temp_msg = msg_wrapper_.create_temperature_msg(raw_imu_, params_.get_gnss_frame());
                 publishers_.publish_temperature(temp_msg);
 
-                auto imu_msg = msg_wrapper_.create_raw_imu_msg(raw_imu_, params_.get_gnss_frame());
+                auto imu_msg = msg_wrapper_.create_raw_imu_msg(raw_imu_, params_.get_imu_frame());
                 if(!msg_wrapper_.is_ins_active(ins_pvax_)){
                     publishers_.publish_imu(imu_msg);
                 }
-                auto twist_msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_gnss_frame());
+                auto twist_msg = msg_wrapper_.create_twist_msg(gnss_vel_, heading_.heading, raw_imu_, params_.get_imu_frame());
                 publishers_.publish_twist(twist_msg);
                 break;
             }
@@ -169,7 +169,7 @@ namespace clap_b7{
                 }
 
                 if(msg_wrapper_.is_ins_active(ins_pvax_)){
-                    auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_gnss_frame());
+                    auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_imu_frame());
                     publishers_.publish_imu(msg);
 
                     auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_, params_.get_gnss_frame());
@@ -185,7 +185,7 @@ namespace clap_b7{
                 std::memcpy(&ecef_, data, sizeof(ECEF));
                 auto msg = msg_wrapper_.create_ecef_msg(ecef_);
                 publishers_.publish_ecef(msg);
-                auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_, params_.get_gnss_frame());
+                auto twist_msg = msg_wrapper_.create_twist_msg(ecef_, raw_imu_, params_.get_imu_frame());
                 publishers_.publish_twist_ecef(twist_msg);
                 break;
             }

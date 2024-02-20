@@ -24,6 +24,7 @@ namespace clap_b7{
         std::string temperature_topic_;
         std::string autoware_orientation_topic_;
         std::string gnss_frame_;
+        std::string imu_frame_;
         double true_heading_offset_;
         int altitude_mode_;
 
@@ -59,6 +60,8 @@ namespace clap_b7{
         std::string get_twist_topic();
 
         std::string get_gnss_frame();
+
+        std::string get_imu_frame();
 
         std::string get_temperature_topic();
 
