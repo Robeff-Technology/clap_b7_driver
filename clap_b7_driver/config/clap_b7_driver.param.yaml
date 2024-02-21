@@ -16,7 +16,8 @@
       autoware_orientation_topic: "clap/autoware_orientation"
 
     frame_config:
-      gnss_frame: "GNSS_INS/gnss_ins_link" # GNSS frame name
+      gnss_frame: "gnss_ins_link" # GNSS frame name
+      imu_frame: "imu_link" # GNSS frame name
 
     true_heading_config:
       true_heading_offset: 0.0 # true heading offset in degrees

@@ -23,7 +23,8 @@ namespace clap_b7{
         node.get_parameter_or<std::string>("topic_config.twist_topic",twist_topic_,"clap/ros/twist");
         node.get_parameter_or<std::string>("topic_config.temperature_topic",temperature_topic_,"clap/ros/temperature");
         node.get_parameter_or<std::string>("topic_config.autoware_orientation_topic",autoware_orientation_topic_,"clap/autoware_orientation");
-        node.get_parameter_or<std::string>("frame_config.gnss_frame",gnss_frame_,"GNSS_INS/gnss_ins_link");
+        node.get_parameter_or<std::string>("frame_config.gnss_frame",gnss_frame_,"gnss_ins_link");
+        node.get_parameter_or<std::string>("frame_config.imu_frame",imu_frame_,"imu_link");
         node.get_parameter_or<double>("true_heading_config.true_heading_offset",true_heading_offset_,0.0);
         node.get_parameter_or<bool>("odometry_config.use_odometry",use_odometry_,false);
         node.get_parameter_or<std::string>("odometry_config.odometry_topic",odometry_topic_,"clap/ros/odometry");
@@ -49,6 +50,7 @@ namespace clap_b7{
         RCLCPP_INFO(node.get_logger(), "temperature_topic: %s", temperature_topic_.c_str());
         RCLCPP_INFO(node.get_logger(), "autoware_orientation_topic: %s", autoware_orientation_topic_.c_str());
         RCLCPP_INFO(node.get_logger(), "gnss_frame: %s", gnss_frame_.c_str());
+        RCLCPP_INFO(node.get_logger(), "imu_frame: %s", imu_frame_.c_str());
         RCLCPP_INFO(node.get_logger(), "true_heading_offset: %f", true_heading_offset_);
         RCLCPP_INFO(node.get_logger(), "use_odometry: %d", use_odometry_);
         RCLCPP_INFO(node.get_logger(), "odometry_topic: %s", odometry_topic_.c_str());
@@ -103,6 +105,10 @@ namespace clap_b7{
 
     std::string ConfigParams::get_gnss_frame() {
         return gnss_frame_;
+    }
+
+    std::string ConfigParams::get_imu_frame() {
+      return imu_frame_;
     }
 
     std::string ConfigParams::get_temperature_topic() {
