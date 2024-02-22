@@ -172,7 +172,7 @@ namespace clap_b7{
                     auto msg = msg_wrapper_.create_sensor_imu_msg(raw_imu_, ins_pvax_, params_.get_imu_frame());
                     publishers_.publish_imu(msg);
 
-                    auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, heading_, params_.get_gnss_frame());
+                    auto autoware_msg = msg_wrapper_.create_autoware_orientation_msg(ins_pvax_, params_.get_gnss_frame());
                     publishers_.publish_autoware_orientation(autoware_msg);
                 }
 

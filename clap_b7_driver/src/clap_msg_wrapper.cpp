@@ -533,7 +533,7 @@ namespace clap_b7{
         return wheel_odom_msg;
     }
 
-    autoware_sensing_msgs::msg::GnssInsOrientationStamped ClapMsgWrapper::create_autoware_orientation_msg(const InsPvax &ins, const UniHeading& heading, std::string frame_id) const {
+    autoware_sensing_msgs::msg::GnssInsOrientationStamped ClapMsgWrapper::create_autoware_orientation_msg(const InsPvax &ins, std::string frame_id) const {
         autoware_sensing_msgs::msg::GnssInsOrientationStamped orientation_msg;
         orientation_msg.header = create_header(std::move(frame_id));
         tf2::Quaternion q;
@@ -542,7 +542,7 @@ namespace clap_b7{
         * in clap b7 roll-> y-axis pitch-> x axis azimuth->left-handed rotation around z-axis
         * in ros imu msg roll-> x-axis pitch-> y axis azimuth->right-handed rotation around z-axis
         */
-        q.setRPY(degree2radian(heading.pitch), degree2radian(ins.roll), degree2radian(-heading.heading));
+        q.setRPY(degree2radian(ins.pitch), degree2radian(ins.roll), degree2radian(-ins.azimuth));
 
         orientation_msg.orientation.orientation.x = q.x();
         orientation_msg.orientation.orientation.y = q.y();
@@ -550,9 +550,9 @@ namespace clap_b7{
         orientation_msg.orientation.orientation.w = q.w();
 
 
-        orientation_msg.orientation.rmse_rotation_x = heading.std_dev_pitch * heading.std_dev_pitch;
+        orientation_msg.orientation.rmse_rotation_x = ins.std_dev_pitch * ins.std_dev_pitch;
         orientation_msg.orientation.rmse_rotation_y = ins.std_dev_roll * ins.std_dev_roll;
-        orientation_msg.orientation.rmse_rotation_z = heading.std_dev_heading * heading.std_dev_heading;
+        orientation_msg.orientation.rmse_rotation_z = ins.std_dev_azimuth * ins.std_dev_azimuth;
 
         return orientation_msg;
     }
