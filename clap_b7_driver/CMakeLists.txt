@@ -50,7 +50,6 @@ set(TARGET_SRC
         src/clap_binary_parser.cpp
         src/clap_b7_driver_node.cpp
         src/clap_b7_driver.cpp
-        src/AsyncSerial.cpp
         src/clap_msg_wrapper.cpp
         src/clap_config_params.cpp
         src/clap_publisher.cpp
@@ -59,7 +58,6 @@ set(TARGET_SRC
 
 set(TARGET_SRC_CONFIG
         src/config_clap_b7_node.cpp
-        src/AsyncSerial.cpp
         src/config_clap_b7.cpp
         )
 

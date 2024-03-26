@@ -7,7 +7,7 @@
 
     port1_config:
       baudrate: 460800 #port 1 baudrate
-      rawimu_period: 0.01 #rawimu msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
+      rawimu_period: 0.02 #rawimu msg period 0.01(100 Hz) 0.02(recommended)(50 Hz) 0.05(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
       inspvax_period: 0.01  #inspvax msg period 0.01(100 Hz) 0.02(50 Hz) 0.05(recommended)(20 Hz) 0.1(10 Hz) 0.2(5 Hz) 1(1 Hz) 0.00(not publish)
       uniheading_period: 0.2 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)
       bestgnsspos_period: 0.2 #0.2(recommended)(5 Hz) 1(1 Hz) 0.00(not publish)

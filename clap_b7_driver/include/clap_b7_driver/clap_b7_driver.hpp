@@ -4,7 +4,7 @@
 
 #ifndef CLAP_B7_DRIVER_HPP
 #define CLAP_B7_DRIVER_HPP
-#include "AsyncSerial.h"
+#include <termios.h>
 
 #include "clap_b7_driver/clap_binary_parser.h"
 #include <clap_b7_driver/clap_msg_wrapper.h>
@@ -25,13 +25,13 @@ namespace clap_b7
     class ClapB7Driver : public rclcpp::Node {
     public:
         ClapB7Driver(const rclcpp::NodeOptions &options);
-        ~ClapB7Driver() override {
-            serial_.close();
-        }
-    private:
-        CallbackAsyncSerial serial_;
-        void serial_read_callback(const char *data, size_t len);
+        ~ClapB7Driver() = default;
         void try_serial_connection(const std::basic_string<char>& port, unsigned int baud);
+        void Update();
+
+    private:
+        int file_descriptor_;
+        struct termios tty_;
         clap_b7::BinaryParser parser_{};
         void clap_read_callback(const uint8_t *data, uint16_t id);
         rclcpp::TimerBase::SharedPtr timer_;

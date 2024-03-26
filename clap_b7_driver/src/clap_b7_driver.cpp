@@ -4,6 +4,8 @@
 
 #include <cmath>
 
+#include <fcntl.h>
+
 #include <clap_b7_driver/clap_b7_driver.hpp>
 #include <clap_b7_driver/clap_config_params.h>
 
@@ -52,7 +54,6 @@ namespace clap_b7{
         }
 
         try_serial_connection(params_.get_serial_port(), params_.get_baudrate());
-        serial_.setCallback(std::bind(&ClapB7Driver::serial_read_callback, this, std::placeholders::_1, std::placeholders::_2));
         parser_.set_receive_callback(std::bind(&ClapB7Driver::clap_read_callback, this, std::placeholders::_1, std::placeholders::_2));
         msg_wrapper_.set_use_ros_time(params_.get_use_ros_time());
     }
@@ -66,17 +67,74 @@ namespace clap_b7{
 
     void ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
         do {
-            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");
-            try {
-                serial_.open(port, baud);
-            }
-            catch(boost::system::system_error &exc){
-                RCLCPP_ERROR(this->get_logger(), "Could not connect to serial port(%s)", exc.what());
-                rclcpp::sleep_for(std::chrono::seconds(1));
-            }
-        }while(!serial_.isOpen() && rclcpp::ok());
-        if(serial_.isOpen()){
-            RCLCPP_INFO(this->get_logger(), "\033[32mConnected to serial port(%s, %s)\033[0m", port.c_str(), std::to_string(baud).c_str());
+            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port: %s", port.c_str());
+            file_descriptor_ = open(port.c_str(), O_RDWR| O_NOCTTY | O_NONBLOCK);
+            int opts = fcntl(file_descriptor_, F_GETFL);
+            opts = opts & (O_NONBLOCK);
+            fcntl(file_descriptor_, F_SETFL, opts);
+        }while(file_descriptor_ == -1);
+
+        memset(&tty_, 0, sizeof(tty_));
+        if (tcgetattr(file_descriptor_, &tty_) != 0) {
+            RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
+            close(file_descriptor_);
+            return;
+        }
+
+        speed_t speed = B9600;
+        switch (baud) {
+            case 9600:
+                speed = B9600;
+                break;
+            case 19200:
+                speed = B19200;
+                break;
+            case 38400:
+                speed = B38400;
+                break;
+            case 57600:
+                speed = B57600;
+                break;
+            case 115200:
+                speed = B115200;
+                break;
+            case 230400:
+                speed = B230400;
+                break;
+            case 460800:
+                speed = B460800;
+                break;
+            case 921600:
+                speed = B500000;
+                break;
+            default:
+                RCLCPP_INFO(this->get_logger(),"Unsupported baud rate");
+                close(file_descriptor_);
+        }
+        cfsetospeed(&tty_, speed);
+        cfsetispeed(&tty_, speed);
+
+        tty_.c_cflag |= (CLOCAL | CREAD);
+        tty_.c_cflag &= ~PARENB; // Disable parity
+        tty_.c_cflag &= ~CSTOPB; // One stop bit
+        tty_.c_cflag &= ~CSIZE;  // Clear data size bits
+        tty_.c_cflag |= CS8;     // 8 bits per byte
+
+        tty_.c_cc[VMIN] = 0;  // Minimum number of characters to read
+        tty_.c_cc[VTIME] = 0; // Timeout in tenths of a second
+
+        if (tcsetattr(file_descriptor_, TCSANOW, &tty_) != 0) {
+            RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
+            close(file_descriptor_);
+            return;
+        }
+    }
+
+    void ClapB7Driver::Update(){
+        unsigned char buffer[255];
+        ssize_t len = read(file_descriptor_, buffer, sizeof(buffer));
+        if (len > 0) {
+            parser_.received_new_data(reinterpret_cast<const uint8_t*>(buffer), static_cast<uint16_t>(len));
         }
     }
 
@@ -191,13 +249,13 @@ namespace clap_b7{
             }
         }
     }
-    void ClapB7Driver::serial_read_callback(const char *data, size_t len) {
-        parser_.received_new_data(reinterpret_cast<const uint8_t*>(data), static_cast<uint16_t>(len));
-    }
 
     void ClapB7Driver::rtcm_callback(const mavros_msgs::msg::RTCM::SharedPtr msg) {
         const char *start_ptr = reinterpret_cast<const char*>(msg->data.data());
-        serial_.write(start_ptr, msg->data.size());
+        int size = write(file_descriptor_, start_ptr, msg->data.size());
+        if(size != static_cast<int>(msg->data.size())){
+            RCLCPP_ERROR(this->get_logger(), "RTCM data could not be sent");
+        }
     }
     void ClapB7Driver::check_time_sync(diagnostic_updater::DiagnosticStatusWrapper &stat) {
         diagnostic_msgs::msg::KeyValue key_value;

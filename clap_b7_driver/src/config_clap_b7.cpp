@@ -3,6 +3,8 @@
 //
 
 #include "clap_b7_driver/config_clap_b7.h"
+#include <fcntl.h>
+
 namespace clap_b7{
 
    ConfigClap::ConfigClap() : Node("clap_b7_config"){
@@ -12,93 +14,152 @@ namespace clap_b7{
         current_port_ = this->declare_parameter<int>("serial_config.clap_port", 1);
         new_baudrate_ = baudrate_;
         load_commands();
-
-        ConfigClap::try_serial_connection(port_, baudrate_);
-        serial_.setCallback(std::bind(&ConfigClap::serial_read_callback, this, std::placeholders::_1, std::placeholders::_2));
+        try_serial_connection(port_, baudrate_);
         if(!commands_.empty()){
-            for(const auto& elements : commands_){
+            for(const auto& elements : commands_) {
                 std::string removed_newline = elements.substr(0, elements.size() - 2);
                 RCLCPP_INFO(this->get_logger(), "Sending command: %s", removed_newline.c_str());
-                serial_.write(elements.c_str(), elements.size());
-
-                if(elements.find("config com" + std::to_string(current_port_)) != std::string::npos){
-                        if(different_baudrate_){
+                write_to_serial(elements.c_str(), elements.size(), true);
+                if (elements.find("config com" + std::to_string(current_port_)) != std::string::npos) {
+                    if (different_baudrate_) {
                         RCLCPP_INFO(this->get_logger(), "Baudrate changed to %d", new_baudrate_);
+                        close(file_descriptor_);
                         try_serial_connection(port_, new_baudrate_);
-                        serial_.write(elements.c_str(), elements.size()); // clap b7 has a bug when baudrate change
+                        write_to_serial(elements.c_str(), elements.size(), true);
                     }
                 }
-                rclcpp::sleep_for(std::chrono::milliseconds(1000));
+                if (elements.find("config com" + std::to_string(current_port_)) != std::string::npos) {
+                    rclcpp::sleep_for(std::chrono::milliseconds(1000));
+                }
             }
         }
         else{
             RCLCPP_ERROR(this->get_logger(), "No commands are loaded");
             rclcpp::shutdown();
         }
+        write_to_serial("saveconfig\r\n", 12, false);
+        rclcpp::sleep_for(std::chrono::milliseconds(1000));
+        write_to_serial("unlog\r\n", 7, false);
+        rclcpp::sleep_for(std::chrono::milliseconds(1000));
+        write_to_serial("config\r\n", 8, false);
+        char buffer[256];
+        int bytes_read = 0;
+        std::string received_data;
+        rclcpp::Time start_time = this->now();
+        while((this->now() - start_time).seconds() < 5.0)
         {
-            config_finish = true;
-            serial_.write("saveconfig\r\n", 12);
-            rclcpp::sleep_for(std::chrono::seconds(2));
-            serial_.write("unlog\r\n", 7);
-            rclcpp::sleep_for(std::chrono::seconds(2));
-            serial_.write("config\r\n", 8);
-            config_finish = false;
-            config_save = true;
-            rclcpp::sleep_for(std::chrono::seconds(5));
-            if(config_done){
-                RCLCPP_INFO(this->get_logger(), "\033[32m----------------NEW CONFIGURATIONS-------------------\n%s----------------CONFIGURATIONS SAVED-------------------\033[0m", receive_string_.c_str());
-                RCLCPP_INFO(this->get_logger(), "Please remove the power cable and restart the CLAP");
-            }
-            else{
-                RCLCPP_ERROR(this->get_logger(), "\033[31m----------------CONFIGURATIONS COULD NOT BE SAVED-------------------\033[0m");
-                RCLCPP_INFO(this->get_logger(), "Please remove the power cable and control your serial config params");
+            bytes_read = read(file_descriptor_, buffer, sizeof(buffer) - 1); // -1 to leave space for null terminator
+            if (bytes_read > 0) {
+                received_data += std::string(buffer, bytes_read);
             }
         }
+        RCLCPP_INFO(this->get_logger(), "\033[32m***************************NEW CONFIGURATIONS***************************\n %s*************************************************************\033[0m", received_data.c_str());
+        RCLCPP_INFO(this->get_logger(), "Please remove the power cable and control your serial config params");
+
     }
+
+    void ConfigClap::write_to_serial(const char *data, size_t len, bool receive){
+        int size = write(file_descriptor_, data, len);
+        if(size < 0){
+            RCLCPP_ERROR(this->get_logger(), "Error writing to serial port: %s", strerror(errno));
+            rclcpp::shutdown();
+        }
+        std::string received_data;
+        rclcpp::Time start_time = this->now();
+        if(receive)
+        {
+            RCLCPP_INFO(this->get_logger(), "girdim");
+            while((this->now() - start_time).seconds() < 2.0)
+            {
+                char buffer[256];
+                size_t bytes_read = read(file_descriptor_, buffer, sizeof(buffer) - 1); // -1 to leave space for null terminator
+                if (bytes_read > 0) {
+                    received_data += std::string(buffer, bytes_read);
+                }
+            }
+            std::string response;
+
+            size_t startPos = 0;
+            size_t endPos = 0;
+
+            while ((startPos = received_data.find('$', startPos)) != std::string::npos) {
+                endPos = received_data.find('\r', startPos);
+                if (endPos != std::string::npos) {
+                    std::string substring = received_data.substr(startPos + 1, endPos - startPos - 1);
+                    response += substring;
+                    startPos = endPos;
+                } else {
+                    // Handle case when '\r' is not found after '$'
+                    break;
+                }
+            }
+            RCLCPP_INFO(this->get_logger(), "\033[32mresponse: %s\033[0m", response.c_str());
+        }
+        tcflush(file_descriptor_, TCIFLUSH);
+   }
 
     void ConfigClap::try_serial_connection(std::basic_string<char> port, unsigned int baud) {
-        // try to connect serial
         do {
-            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port");
-            try {
-                serial_.open(port, baud);
-            }
-            catch(boost::system::system_error &exc){
-                RCLCPP_ERROR(this->get_logger(), "Could not connect to serial port(%s)", exc.what());
-                rclcpp::sleep_for(std::chrono::seconds(1));
-            }
-        }while(!serial_.isOpen() && rclcpp::ok());
+            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port: %s baudrate : %d", port.c_str(), baud);
+            file_descriptor_ = open(port.c_str(), O_RDWR| O_NOCTTY );
+            int opts = fcntl(file_descriptor_, F_GETFL);
+            opts = opts & (O_NONBLOCK);
+            fcntl(file_descriptor_, F_SETFL, opts);
+        }while(file_descriptor_ == -1);
 
-        if(serial_.isOpen()){
-            RCLCPP_INFO(this->get_logger(), "\033[32mConnected to serial port(%s, %s)\033[0m", port.c_str(), std::to_string(baud).c_str());
+        memset(&tty_, 0, sizeof(tty_));
+        if (tcgetattr(file_descriptor_, &tty_) != 0) {
+            RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
+            close(file_descriptor_);
+            return;
         }
-    }
 
-    void ConfigClap::serial_read_callback(const char *data, size_t len) {
-        if(config_finish){
-            for(size_t i = 0; i < len; i++) {
-                if (data[i] == '$') {
-                    command_detected_ = true;
-                }
-                if (command_detected_) {
-                    if (data[i] == '\n') {
-                        command_detected_ = false;
-                        if (receive_string_.find("OK") != std::string::npos) {
-                            RCLCPP_INFO(this->get_logger(), "\033[32mCommand loaded successfully: %s\033[0m",
-                                        receive_string_.c_str());
-                            config_done = true;
-                            serial_.write("unlog\r\n", 12);
-                        }
-                        receive_string_.clear();
-                    }
-                    else {
-                        receive_string_ += data[i];
-                    }
-                }
-            }
+        speed_t speed = B9600;
+        switch (baud) {
+            case 9600:
+                speed = B9600;
+                break;
+            case 19200:
+                speed = B19200;
+                break;
+            case 38400:
+                speed = B38400;
+                break;
+            case 57600:
+                speed = B57600;
+                break;
+            case 115200:
+                speed = B115200;
+                break;
+            case 230400:
+                speed = B230400;
+                break;
+            case 460800:
+                speed = B460800;
+                break;
+            case 921600:
+                speed = B500000;
+                break;
+            default:
+                RCLCPP_INFO(this->get_logger(),"Unsupported baud rate");
+                close(file_descriptor_);
         }
-        if(config_save){
-            receive_string_ += std::string(data, len);
+        cfsetospeed(&tty_, speed);
+        cfsetispeed(&tty_, speed);
+
+        tty_.c_cflag |= (CLOCAL | CREAD);
+        tty_.c_cflag &= ~PARENB; // Disable parity
+        tty_.c_cflag &= ~CSTOPB; // One stop bit
+        tty_.c_cflag &= ~CSIZE;  // Clear data size bits
+        tty_.c_cflag |= CS8;     // 8 bits per byte
+
+        tty_.c_cc[VMIN] = 0;  // Minimum number of characters to read
+        tty_.c_cc[VTIME] = 0; // Timeout in tenths of a second
+
+        if (tcsetattr(file_descriptor_, TCSANOW, &tty_) != 0) {
+            RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
+            close(file_descriptor_);
+            return;
         }
     }
 
@@ -180,7 +241,7 @@ namespace clap_b7{
         commands_.push_back(command);
 
 
-        ins_align_velocity = this->declare_parameter<float>("ins_config.align_velocity_threshold", 0.5);
+        ins_align_velocity = this->declare_parameter<float>("ins_config.align_velocity_threshold", 0.5f);
         command = "config ins alignmentvel " + std::to_string(ins_align_velocity) + "\r\n";
         commands_.push_back(command);
 
