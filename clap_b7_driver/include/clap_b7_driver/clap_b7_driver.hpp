@@ -25,8 +25,10 @@ namespace clap_b7
     class ClapB7Driver : public rclcpp::Node {
     public:
         ClapB7Driver(const rclcpp::NodeOptions &options);
-        ~ClapB7Driver() = default;
-        void try_serial_connection(const std::basic_string<char>& port, unsigned int baud);
+        ~ClapB7Driver(){
+            close(file_descriptor_);
+        }
+        int try_serial_connection(const std::basic_string<char>& port, unsigned int baud);
         void Update();
 
     private:

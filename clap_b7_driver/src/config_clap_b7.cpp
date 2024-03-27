@@ -14,11 +14,11 @@ namespace clap_b7{
         current_port_ = this->declare_parameter<int>("serial_config.clap_port", 1);
         new_baudrate_ = baudrate_;
         load_commands();
-        try_serial_connection(port_, baudrate_);
+        if(try_serial_connection(port_, baudrate_) == -1){
+            exit(1);
+        }
         if(!commands_.empty()){
             for(const auto& elements : commands_) {
-                std::string removed_newline = elements.substr(0, elements.size() - 2);
-                RCLCPP_INFO(this->get_logger(), "Sending command: %s", removed_newline.c_str());
                 write_to_serial(elements.c_str(), elements.size(), true);
                 if (elements.find("config com" + std::to_string(current_port_)) != std::string::npos) {
                     if (different_baudrate_) {
@@ -37,16 +37,14 @@ namespace clap_b7{
             RCLCPP_ERROR(this->get_logger(), "No commands are loaded");
             rclcpp::shutdown();
         }
-        write_to_serial("saveconfig\r\n", 12, false);
-        rclcpp::sleep_for(std::chrono::milliseconds(1000));
-        write_to_serial("unlog\r\n", 7, false);
-        rclcpp::sleep_for(std::chrono::milliseconds(1000));
+        write_to_serial("saveconfig\r\n", 12, true);
+        write_to_serial("unlog\r\n", 7, true);
         write_to_serial("config\r\n", 8, false);
         char buffer[256];
         int bytes_read = 0;
         std::string received_data;
         rclcpp::Time start_time = this->now();
-        while((this->now() - start_time).seconds() < 5.0)
+        while((this->now() - start_time).seconds() < 5.0 && rclcpp::ok())
         {
             bytes_read = read(file_descriptor_, buffer, sizeof(buffer) - 1); // -1 to leave space for null terminator
             if (bytes_read > 0) {
@@ -58,60 +56,63 @@ namespace clap_b7{
 
     }
 
-    void ConfigClap::write_to_serial(const char *data, size_t len, bool receive){
-        int size = write(file_descriptor_, data, len);
+
+
+    void ConfigClap::write_to_serial(std::string data, size_t len, bool receive){
+        std::string removed_newline = data.substr(0, data.size() - 2);
+        RCLCPP_INFO(this->get_logger(), "Sending command: %s", removed_newline.c_str());
+        int size = write(file_descriptor_, data.c_str(), len);
         if(size < 0){
             RCLCPP_ERROR(this->get_logger(), "Error writing to serial port: %s", strerror(errno));
-            rclcpp::shutdown();
         }
-        std::string received_data;
-        rclcpp::Time start_time = this->now();
         if(receive)
         {
-            RCLCPP_INFO(this->get_logger(), "girdim");
-            while((this->now() - start_time).seconds() < 2.0)
+            rclcpp::Time start_time = this->now();
+            std::string received_data{};
+            while((this->now() - start_time).seconds() < 3.0)
             {
                 char buffer[256];
-                size_t bytes_read = read(file_descriptor_, buffer, sizeof(buffer) - 1); // -1 to leave space for null terminator
+                int bytes_read = read(file_descriptor_, buffer, sizeof(buffer) - 1); // -1 to leave space for null terminator
                 if (bytes_read > 0) {
                     received_data += std::string(buffer, bytes_read);
                 }
             }
-            std::string response;
 
-            size_t startPos = 0;
-            size_t endPos = 0;
+            if(!received_data.empty()){
+                std::string response;
 
-            while ((startPos = received_data.find('$', startPos)) != std::string::npos) {
-                endPos = received_data.find('\r', startPos);
-                if (endPos != std::string::npos) {
-                    std::string substring = received_data.substr(startPos + 1, endPos - startPos - 1);
-                    response += substring;
-                    startPos = endPos;
-                } else {
-                    // Handle case when '\r' is not found after '$'
-                    break;
+                size_t startPos = 0;
+                size_t endPos = 0;
+                while ((startPos = received_data.find('$', startPos)) != std::string::npos) {
+                    endPos = received_data.find('\r', startPos);
+                    if (endPos != std::string::npos) {
+                        std::string substring = received_data.substr(startPos + 1, endPos - startPos - 1);
+                        response += substring;
+                        startPos = endPos;
+                    }
+                    else{
+                        break;
+                    }
                 }
+                RCLCPP_INFO(this->get_logger(), "\033[32mresponse: %s\033[0m", response.c_str());
+                tcflush(file_descriptor_, TCIOFLUSH);
             }
-            RCLCPP_INFO(this->get_logger(), "\033[32mresponse: %s\033[0m", response.c_str());
         }
-        tcflush(file_descriptor_, TCIFLUSH);
-   }
+    }
 
-    void ConfigClap::try_serial_connection(std::basic_string<char> port, unsigned int baud) {
-        do {
-            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port: %s baudrate : %d", port.c_str(), baud);
-            file_descriptor_ = open(port.c_str(), O_RDWR| O_NOCTTY );
-            int opts = fcntl(file_descriptor_, F_GETFL);
-            opts = opts & (O_NONBLOCK);
-            fcntl(file_descriptor_, F_SETFL, opts);
-        }while(file_descriptor_ == -1);
+    int ConfigClap::try_serial_connection(std::basic_string<char> port, unsigned int baud) {
+        RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port: %s", port.c_str());
+        file_descriptor_ = open(port.c_str(), O_RDWR| O_NOCTTY | O_NONBLOCK);
+        int opts = fcntl(file_descriptor_, F_GETFL);
+        opts = opts & (O_NONBLOCK);
+        fcntl(file_descriptor_, F_SETFL, opts);
+
 
         memset(&tty_, 0, sizeof(tty_));
         if (tcgetattr(file_descriptor_, &tty_) != 0) {
             RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
             close(file_descriptor_);
-            return;
+            return -1;
         }
 
         speed_t speed = B9600;
@@ -152,6 +153,9 @@ namespace clap_b7{
         tty_.c_cflag &= ~CSTOPB; // One stop bit
         tty_.c_cflag &= ~CSIZE;  // Clear data size bits
         tty_.c_cflag |= CS8;     // 8 bits per byte
+        tty_.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+        tty_.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG /*| IEXTEN | ECHONL*/);
+        tty_.c_oflag &= ~OPOST;
 
         tty_.c_cc[VMIN] = 0;  // Minimum number of characters to read
         tty_.c_cc[VTIME] = 0; // Timeout in tenths of a second
@@ -159,9 +163,10 @@ namespace clap_b7{
         if (tcsetattr(file_descriptor_, TCSANOW, &tty_) != 0) {
             RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
             close(file_descriptor_);
-            return;
+            return -1;
         }
-    }
+        return 1;
+   }
 
     void ConfigClap::load_commands(){
        std::string command{"unlog\r\n"};

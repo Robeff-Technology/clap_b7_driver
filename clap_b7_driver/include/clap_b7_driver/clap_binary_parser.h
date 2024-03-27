@@ -29,7 +29,7 @@ namespace clap_b7 {
         };
         ClapB7ParseStatus status_{ClapB7ParseStatus::SYNCH1_CONTROL};
         uint16_t data_index_{0};
-        uint8_t raw_data_[512];
+        uint8_t raw_data_[256];
     public:
         BinaryParser() = default;
         enum class MessageId : std::uint16_t{

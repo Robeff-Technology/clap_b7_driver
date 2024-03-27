@@ -53,7 +53,10 @@ namespace clap_b7{
             }
         }
 
-        try_serial_connection(params_.get_serial_port(), params_.get_baudrate());
+        if(try_serial_connection(params_.get_serial_port(), params_.get_baudrate()) == -1){
+            exit(1);
+        }
+        RCLCPP_INFO(this->get_logger(), "Serial connection is established");
         parser_.set_receive_callback(std::bind(&ClapB7Driver::clap_read_callback, this, std::placeholders::_1, std::placeholders::_2));
         msg_wrapper_.set_use_ros_time(params_.get_use_ros_time());
     }
@@ -65,20 +68,19 @@ namespace clap_b7{
         params_.load_parameters(n_private);
     }
 
-    void ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
-        do {
-            RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port: %s", port.c_str());
-            file_descriptor_ = open(port.c_str(), O_RDWR| O_NOCTTY | O_NONBLOCK);
-            int opts = fcntl(file_descriptor_, F_GETFL);
-            opts = opts & (O_NONBLOCK);
-            fcntl(file_descriptor_, F_SETFL, opts);
-        }while(file_descriptor_ == -1);
+    int ClapB7Driver::try_serial_connection(const std::basic_string<char>&port, unsigned int baud) {
+        RCLCPP_INFO(this->get_logger(), "Trying to connect to serial port: %s", port.c_str());
+        file_descriptor_ = open(port.c_str(), O_RDWR| O_NOCTTY | O_NONBLOCK);
+        int opts = fcntl(file_descriptor_, F_GETFL);
+        opts = opts & (O_NONBLOCK);
+        fcntl(file_descriptor_, F_SETFL, opts);
+
 
         memset(&tty_, 0, sizeof(tty_));
         if (tcgetattr(file_descriptor_, &tty_) != 0) {
             RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
             close(file_descriptor_);
-            return;
+            return -1;
         }
 
         speed_t speed = B9600;
@@ -119,6 +121,9 @@ namespace clap_b7{
         tty_.c_cflag &= ~CSTOPB; // One stop bit
         tty_.c_cflag &= ~CSIZE;  // Clear data size bits
         tty_.c_cflag |= CS8;     // 8 bits per byte
+        tty_.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+        tty_.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG /*| IEXTEN | ECHONL*/);
+        tty_.c_oflag &= ~OPOST;
 
         tty_.c_cc[VMIN] = 0;  // Minimum number of characters to read
         tty_.c_cc[VTIME] = 0; // Timeout in tenths of a second
@@ -126,12 +131,13 @@ namespace clap_b7{
         if (tcsetattr(file_descriptor_, TCSANOW, &tty_) != 0) {
             RCLCPP_INFO(this->get_logger(), "Error getting serial port attributes: %s", strerror(errno));
             close(file_descriptor_);
-            return;
+            return -1;
         }
+        return 1;
     }
 
     void ClapB7Driver::Update(){
-        unsigned char buffer[255];
+        unsigned char buffer[256];
         ssize_t len = read(file_descriptor_, buffer, sizeof(buffer));
         if (len > 0) {
             parser_.received_new_data(reinterpret_cast<const uint8_t*>(buffer), static_cast<uint16_t>(len));

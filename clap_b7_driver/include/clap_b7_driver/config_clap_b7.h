@@ -18,7 +18,10 @@ namespace clap_b7{
     class ConfigClap: public rclcpp::Node {
     public:
         ConfigClap();
-        ~ConfigClap() = default;
+        ~ConfigClap(){
+            close(file_descriptor_);
+        };
+        void Update();
     private:
         int param_{};
         bool pps_enable{};
@@ -31,9 +34,9 @@ namespace clap_b7{
         bool send_gprmc = false;
         float msg_period{};
         int file_descriptor_;
-        struct termios tty_;
 
-        void try_serial_connection(std::basic_string<char> port, unsigned int baud);
+        struct termios tty_;
+        int try_serial_connection(std::basic_string<char> port, unsigned int baud);
         std::string port_;
         int baudrate_;
         int current_port_;
@@ -42,7 +45,7 @@ namespace clap_b7{
         std::vector<std::string> commands_;
         void load_commands();
         void load_log_commands(const std::string& port, float period, std::string command);
-        void write_to_serial(const char *data, size_t len, bool receive);
+        void write_to_serial(std::string data, size_t len, bool receive);
     };
 }
 #endif //BUILD_CONFIG_CLAP_B7_H
